@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/gozargah/marzban" target="_blank" rel="noopener noreferrer">
+  <a href="https://github.com/Astar-IT/Marzban-astar-it" target="_blank" rel="noopener noreferrer">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/logo-dark.png">
       <img width="160" height="160" src="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/logo-light.png">
@@ -54,7 +54,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gozargah/marzban" target="_blank" rel="noopener noreferrer" >
+  <a href="https://github.com/Astar-IT/Marzban-astar-it" target="_blank" rel="noopener noreferrer" >
     <img src="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/preview.png" alt="Marzban screenshots" width="600" height="auto">
   </a>
 </p>
@@ -105,6 +105,9 @@ Marzban удобен в использовании, многофункциона
 - Встроенный **Command Line Interface (CLI)**
 - **Несколько языков**
 - Поддержка **Нескольких администраторов** (WIP)
+- Поддержка **PostgreSQL**, MySQL, MariaDB и SQLite
+- **Автоматическое создание администратора** при первом входе
+- **Контроль подключений** - ограничение одновременных соединений для пользователей
 
 # Руководство по установке
 
@@ -124,6 +127,17 @@ sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/
 ```bash
 sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install --database mariadb
 ```
+
+### Установка с PostgreSQL (ручная настройка)
+
+Для использования PostgreSQL, установите базу данных и укажите URL подключения в файле `.env`:
+
+```bash
+# PostgreSQL connection string format:
+SQLALCHEMY_DATABASE_URL=postgresql://user:password@localhost:5432/marzban
+```
+
+**Примечание:** При первом входе в систему (если нет настроенных администраторов), первый пользователь автоматически создаётся как sudo-администратор.
 
 Когда установка будет завершена:
 - Вы увидите логи, которые можно остановить, нажав `Ctrl+C` или закрыв терминал.
@@ -172,7 +186,7 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
 Клонируйте этот проект и установите зависимости (Вам нужен Python >= 3.8):
 
 ```bash
-git clone https://github.com/Gozargah/Marzban.git
+git clone https://github.com/Astar-IT/Marzban-astar-it.git
 cd Marzban
 wget -qO- https://bootstrap.pypa.io/get-pip.py | python3 -
 python3 -m pip install -r requirements.txt
@@ -287,15 +301,16 @@ server {
 
 | Перменная                                | Описание                                                                                                                       |
 | ---------------------------------------- |--------------------------------------------------------------------------------------------------------------------------------|
-| SUDO_USERNAME                            | Имя пользователя главного администратора                                                                                       |
-| SUDO_PASSWORD                            | Пароль главного администратора                                                                                                 |
-| SQLALCHEMY_DATABASE_URL                  | Путь к файлу БД ([SQLAlchemy's docs](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls))                       |
+| SUDO_USERNAME                            | Имя пользователя главного администратора (опционально, можно создать при первом входе)                                        |
+| SUDO_PASSWORD                            | Пароль главного администратора (опционально, можно создать при первом входе)                                                  |
+| SQLALCHEMY_DATABASE_URL                  | URL базы данных (SQLite, MySQL, MariaDB, PostgreSQL) ([SQLAlchemy's docs](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls)) |
 | UVICORN_HOST                             | Привязка приложения к хосту (по умолчанию: `0.0.0.0`)                                                                          |
 | UVICORN_PORT                             | Привязка приложения к порту (по умолчанию: `8000`)                                                                             |
 | UVICORN_UDS                              | Привязка приложения к UNIX domain socket                                                                                       |
 | UVICORN_SSL_CERTFILE                     | Адрес файла сертификата SSL                                                                                                    |
 | UVICORN_SSL_KEYFILE                      | Адрес файла ключа SSL                                                                                                          |
 | UVICORN_SSL_CA_TYPE                      | Тип центра сертификации ключа SSL. Используйте `private` для тестирования самоподписанных CA (по умолчанию: `public`)          |
+| DEFAULT_USER_CONNECTION_LIMIT            | Лимит подключений по умолчанию для пользователей. 0 = без ограничений (по умолчанию: `0`)                                      |
 | XRAY_JSON                                | Адрес файла JSON конфигурации Xray. (по умолчанию: `xray_config.json`)                                                         |
 | XRAY_EXECUTABLE_PATH                     | Путь к бинарникам Xray  (по умолчанию: `/usr/local/bin/xray`)                                                                  |
 | XRAY_ASSETS_PATH                         | Путь к папке с рессурсными файлами для Xray (файлы geoip.dat и geosite.dat) (по умолчанию: `/usr/local/share/xray`)            |
@@ -324,6 +339,19 @@ server {
 | USE_CUSTOM_JSON_FOR_V2RAYNG              | Enable custom JSON config only for V2rayNG (default: `False`)                                                                  |
 | USE_CUSTOM_JSON_FOR_STREISAND            | Enable custom JSON config only for Streisand (default: `False`)                                                                |
 | USE_CUSTOM_JSON_FOR_V2RAYN               | Enable custom JSON config only for V2rayN (default: `False`)                                                                   |
+
+## Контроль подключений
+
+Marzban поддерживает ограничение количества одновременных подключений для каждого пользователя. Это позволяет контролировать сколько устройств могут одновременно использовать прокси.
+
+Настройка выполняется для каждого пользователя индивидуально:
+- **0 или NULL** - без ограничений (неограниченное количество подключений)
+- **Положительное число** - максимальное количество одновременных подключений
+
+Вы также можете установить значение по умолчанию через переменную окружения:
+```bash
+DEFAULT_USER_CONNECTION_LIMIT=2  # Ограничить 2 подключениями по умолчанию
+```
 
 # документация
 
@@ -432,6 +460,8 @@ Body:
 
 Сделано в [Unknown!] и опубликовано под [AGPL-3.0](./LICENSE).
 
+Расширено [astar-it.com](https://astar-it.com)
+
 # Участники
 
 Мы ❤️‍🔥 участников проекта! Если вы хотите внести свой вклад, пожалуйста, ознакомьтесь с нашим [Contributing Guidelines](CONTRIBUTING.md) и не стесняйтесь отправлять запросы на исправление ошибок или сообщить о проблеме. Мы также приглашаем вас присоединиться к нашей группе [Telegram](https://t.me/gozargah_marzban) для получения поддержки.
@@ -442,8 +472,8 @@ Body:
 Спасибо всем участникам, благодаря которым Marzban становится лучше:
 </p>
 <p align="center">
-<a href="https://github.com/Gozargah/Marzban/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Gozargah/Marzban" />
+<a href="https://github.com/Astar-IT/Marzban-astar-it/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Astar-IT/Marzban-astar-it" />
 </a>
 </p>
 <p align="center">

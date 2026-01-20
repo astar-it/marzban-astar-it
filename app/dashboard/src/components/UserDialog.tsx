@@ -116,6 +116,7 @@ const getDefaultValues = (): FormType => {
     status: "active",
     on_hold_expire_duration: null,
     note: "",
+    connection_limit: null,
     inbounds,
     proxies: {
       vless: { id: "", flow: "" },
@@ -149,6 +150,15 @@ const baseSchema = {
     message: "userDialog.selectOneProtocol",
   }),
   note: z.string().nullable(),
+  connection_limit: z
+    .string()
+    .or(z.number())
+    .nullable()
+    .transform((str) => {
+      if (str === null || str === "" || str === undefined) return null;
+      const num = Number(str);
+      return num > 0 ? num : null;
+    }),
   proxies: z
     .record(z.string(), z.record(z.string(), z.any()))
     .transform((ins) => {
@@ -306,6 +316,7 @@ export const UserDialog: FC<UserDialogProps> = () => {
           values.status === "on_hold"
           ? values.status
           : "active",
+      connection_limit: values.connection_limit,
     };
 
     methods[method](body)
@@ -702,6 +713,30 @@ export const UserDialog: FC<UserDialogProps> = () => {
                         <FormErrorMessage>
                           {form.formState.errors?.note?.message}
                         </FormErrorMessage>
+                      </FormControl>
+
+                      <FormControl mb={"10px"}>
+                        <FormLabel>{t("userDialog.connectionLimit")}</FormLabel>
+                        <Controller
+                          control={form.control}
+                          name="connection_limit"
+                          render={({ field }) => {
+                            return (
+                              <Input
+                                type="number"
+                                size="sm"
+                                borderRadius="6px"
+                                onChange={field.onChange}
+                                disabled={disabled}
+                                placeholder="0 = unlimited"
+                                value={field.value ? String(field.value) : ""}
+                              />
+                            );
+                          }}
+                        />
+                        <FormHelperText>
+                          {t("userDialog.connectionLimitHelp")}
+                        </FormHelperText>
                       </FormControl>
                     </Flex>
                     {error && (

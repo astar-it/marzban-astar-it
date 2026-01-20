@@ -1,11 +1,11 @@
-# Contribute to Marzban
+# Contribute to Marzban (Astar-IT Fork)
 Thanks for considering contributing to Marzban!
 
 ## Questions
 
 Please don't ask your questions in issues. Instead, use one of the following ways to ask:
 - Ask on our telegram group: [@Gozargah_Marzban](https://t.me/gozargah_marzban)
-- Ask on our [GitHub Discussions](https://github.com/gozargah/marzban/discussions) for long term discussion or larger questions.
+- Ask on our [GitHub Discussions](https://github.com/Astar-IT/Marzban-astar-it/discussions) for long term discussion or larger questions.
 
 
 ## Reporting issues

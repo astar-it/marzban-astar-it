@@ -179,6 +179,8 @@
   "userDialog.vmessDesc": "Быстрый и безопасный",
   "userDialog.warningNoProtocol": "Пожалуйста, выберите хотя бы один протокол",
   "userDialog.weeks": "Недели",
+  "userDialog.connectionLimit": "Лимит подключений",
+  "userDialog.connectionLimitHelp": "Максимум одновременных подключений (0 = без ограничений)",
   "username": "Имя пользователя",
   "users": "Пользователи",
   "usersTable.copied": "Скопировано",

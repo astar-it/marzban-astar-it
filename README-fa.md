@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/gozargah/marzban" target="_blank" rel="noopener noreferrer">
+  <a href="https://github.com/Astar-IT/Marzban-astar-it" target="_blank" rel="noopener noreferrer">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/logo-dark.png">
       <img width="160" height="160" src="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/logo-light.png">
@@ -54,8 +54,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gozargah/marzban" target="_blank" rel="noopener noreferrer" >
-    <img src="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/preview.png" alt="Elk screenshots" width="600" height="auto">
+  <a href="https://github.com/Astar-IT/Marzban-astar-it" target="_blank" rel="noopener noreferrer" >
+    <img src="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/preview.png" alt="Marzban screenshots" width="600" height="auto">
   </a>
 </p>
 
@@ -103,6 +103,9 @@
 - **ربات تلگرام**
 - **رابط خط فرمان (CLI)** داخلی
 - قابلیت ایجاد **چندین مدیر** (تکمیل نشده است)
+- پشتیبانی از **PostgreSQL**، MySQL، MariaDB و SQLite
+- **ایجاد خودکار مدیر** در اولین ورود
+- **کنترل تعداد اتصالات** برای کاربران
 
 # راهنمای نصب
 
@@ -170,7 +173,7 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
 پروژه را clone کنید و dependency ها را نصب کنید. دقت کنید که نسخه پایتون شما Python>=3.8 باشد.
 
 ```bash
-git clone https://github.com/Gozargah/Marzban.git
+git clone https://github.com/Astar-IT/Marzban-astar-it.git
 cd Marzban
 wget -qO- https://bootstrap.pypa.io/get-pip.py | python3 -
 python3 -m pip install -r requirements.txt
@@ -400,6 +403,8 @@ Body:
 
 توسعه یافته شده در [ناشناس!] و منتشر شده تحت لایسنس [AGPL-3.0](./LICENSE).
 
+توسعه داده شده توسط [astar-it.com](https://astar-it.com)
+
 
 # مشارکت در توسعه
 این ❤️‍🔥 تقدیم به همه‌ی کسایی که در توسعه مرزبان مشارکت می‌کنند! اگر می‌خواهید مشارکت داشته باشید، لطفاً [دستورالعمل‌های مشارکت](CONTRIBUTING.md) ما را بررسی کنید و در صورت تمایل Pull Request ارسال کنید یا یک Issue  باز کنید. همچنین از شما برای پیوستن به گروه [تلگرام](https://t.me/gozargah_marzban) ما برای حمایت یا کمک به راهنمایی استقبال می کنیم.
@@ -410,8 +415,8 @@ Body:
 با تشکر از همه همکارانی که به بهبود مرزبان کمک کردند:
 </p>
 <p align="center">
-<a href="https://github.com/Gozargah/Marzban/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Gozargah/Marzban" />
+<a href="https://github.com/Astar-IT/Marzban-astar-it/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Astar-IT/Marzban-astar-it" />
 </a>
 </p>
 <p align="center">

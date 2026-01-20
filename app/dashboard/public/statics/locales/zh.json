@@ -179,6 +179,8 @@
   "userDialog.vmessDesc": "快速且安全",
   "userDialog.warningNoProtocol": "请至少选择一个协议",
   "userDialog.weeks": "周",
+  "userDialog.connectionLimit": "连接限制",
+  "userDialog.connectionLimitHelp": "最大并发连接数 (0 = 无限制)",
   "username": "用户名",
   "users": "用户",
   "usersTable.copied": "已复制",

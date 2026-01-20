@@ -179,6 +179,8 @@
   "userDialog.vmessDesc": "Fast and secure",
   "userDialog.warningNoProtocol": "Please select at least one protocol",
   "userDialog.weeks": "Weeks",
+  "userDialog.connectionLimit": "Connection Limit",
+  "userDialog.connectionLimitHelp": "Max concurrent connections (0 = unlimited)",
   "username": "Username",
   "users": "Users",
   "usersTable.copied": "Copied",

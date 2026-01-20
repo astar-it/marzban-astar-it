@@ -10,7 +10,7 @@ from app.dependencies import get_admin_by_username, validate_admin
 from app.models.admin import Admin, AdminCreate, AdminModify, Token
 from app.utils import report, responses
 from app.utils.jwt import create_admin_token
-from config import LOGIN_NOTIFY_WHITE_LIST
+from config import LOGIN_NOTIFY_WHITE_LIST, SUDOERS
 
 router = APIRouter(tags=["Admin"], prefix="/api", responses={401: responses._401})
 
@@ -31,8 +31,26 @@ def admin_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    """Authenticate an admin and issue a token."""
+    """Authenticate an admin and issue a token.
+    
+    On first login (no admins exist and no SUDOERS configured), 
+    automatically creates the first user as sudo admin.
+    """
     client_ip = get_client_ip(request)
+
+    # Check if this is the first login (no admins exist and no SUDOERS)
+    admin_count = crud.count_admins(db)
+    if admin_count == 0 and not SUDOERS:
+        # Create first admin as sudo
+        from app.models.admin import AdminCreate
+        new_admin = AdminCreate(
+            username=form_data.username,
+            password=form_data.password,
+            is_sudo=True
+        )
+        crud.create_admin(db, new_admin)
+        report.login(form_data.username, "🔒", client_ip, True)
+        return Token(access_token=create_admin_token(form_data.username, True))
 
     dbadmin = validate_admin(db, form_data.username, form_data.password)
     if not dbadmin:

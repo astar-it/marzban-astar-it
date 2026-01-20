@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/gozargah/marzban" target="_blank" rel="noopener noreferrer">
+  <a href="https://github.com/Astar-IT/Marzban-astar-it" target="_blank" rel="noopener noreferrer">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/logo-dark.png">
       <img width="160" height="160" src="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/logo-light.png">
@@ -54,7 +54,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gozargah/marzban" target="_blank" rel="noopener noreferrer" >
+  <a href="https://github.com/Astar-IT/Marzban-astar-it" target="_blank" rel="noopener noreferrer" >
     <img src="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/preview.png" alt="Marzban screenshots" width="600" height="auto">
   </a>
 </p>
@@ -105,6 +105,9 @@ Marzban is user-friendly, feature-rich and reliable. It lets you to create diffe
 - Integrated **Command Line Interface (CLI)**
 - **Multi-language**
 - **Multi-admin** support (WIP)
+- **PostgreSQL**, MySQL, MariaDB and SQLite database support
+- **Automatic admin creation** on first login
+- **Connection limit** control for users
 
 # Installation guide
 
@@ -124,6 +127,17 @@ Run the following command to install Marzban with MariaDB database:
 ```bash
 sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install --database mariadb
 ```
+
+### PostgreSQL Installation (Manual Setup)
+
+To use PostgreSQL, install the database and specify the connection URL in the `.env` file:
+
+```bash
+# PostgreSQL connection string format:
+SQLALCHEMY_DATABASE_URL=postgresql://user:password@localhost:5432/marzban
+```
+
+**Note:** On first login (when no admins are configured), the first user is automatically created as a sudo admin.
 
 Once the installation is complete:
 
@@ -173,7 +187,7 @@ bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release
 Clone this project and install the dependencies (you need Python >= 3.8)
 
 ```bash
-git clone https://github.com/Gozargah/Marzban.git
+git clone https://github.com/Astar-IT/Marzban-astar-it.git
 cd Marzban
 wget -qO- https://bootstrap.pypa.io/get-pip.py | python3 -
 python3 -m pip install -r requirements.txt
@@ -288,9 +302,10 @@ By default the app will be run on `http://localhost:8000/dashboard`. You can con
 
 | Variable                                 | Description                                                                                                              |
 | ---------------------------------------- |--------------------------------------------------------------------------------------------------------------------------|
-| SUDO_USERNAME                            | Superuser's username                                                                                                     |
-| SUDO_PASSWORD                            | Superuser's password                                                                                                     |
-| SQLALCHEMY_DATABASE_URL                  | Database URL ([SQLAlchemy's docs](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls))                    |
+| SUDO_USERNAME                            | Superuser's username (optional, can be created on first login)                                                           |
+| SUDO_PASSWORD                            | Superuser's password (optional, can be created on first login)                                                           |
+| SQLALCHEMY_DATABASE_URL                  | Database URL (SQLite, MySQL, MariaDB, PostgreSQL) ([SQLAlchemy's docs](https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls)) |
+| DEFAULT_USER_CONNECTION_LIMIT            | Default connection limit for users. 0 = unlimited (default: `0`)                                                         |
 | UVICORN_HOST                             | Bind application to this host (default: `0.0.0.0`)                                                                       |
 | UVICORN_PORT                             | Bind application to this port (default: `8000`)                                                                          |
 | UVICORN_UDS                              | Bind application to a UNIX domain socket                                                                                 |
@@ -326,6 +341,18 @@ By default the app will be run on `http://localhost:8000/dashboard`. You can con
 | USE_CUSTOM_JSON_FOR_STREISAND            | Enable custom JSON config only for Streisand (default: `False`)                                                          |
 | USE_CUSTOM_JSON_FOR_V2RAYN               | Enable custom JSON config only for V2rayN (default: `False`)                                                             |
 
+## Connection Limit
+
+Marzban supports limiting the number of concurrent connections for each user. This allows you to control how many devices can use the proxy simultaneously.
+
+Configuration is done individually for each user:
+- **0 or NULL** - no limit (unlimited connections)
+- **Positive number** - maximum number of concurrent connections
+
+You can also set a default value via environment variable:
+```bash
+DEFAULT_USER_CONNECTION_LIMIT=2  # Limit to 2 connections by default
+```
 
 # Documentation
 
@@ -432,18 +459,20 @@ Thank you for your support!
 
 Made in [Unknown!] and Published under [AGPL-3.0](./LICENSE).
 
+Extended by [astar-it.com](https://astar-it.com)
+
 # Contributors
 
 We ❤️‍🔥 contributors! If you'd like to contribute, please check out our [Contributing Guidelines](CONTRIBUTING.md) and feel free to submit a pull request or open an issue. We also welcome you to join our [Telegram](https://t.me/gozargah_marzban) group for either support or contributing guidance.
 
-Check [open issues](https://github.com/gozargah/marzban/issues) to help the progress of this project.
+Check [open issues](https://github.com/Astar-IT/Marzban-astar-it/issues) to help the progress of this project.
 
 <p align="center">
 Thanks to the all contributors who have helped improve Marzban:
 </p>
 <p align="center">
-<a href="https://github.com/Gozargah/Marzban/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Gozargah/Marzban" />
+<a href="https://github.com/Astar-IT/Marzban-astar-it/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Astar-IT/Marzban-astar-it" />
 </a>
 </p>
 <p align="center">

@@ -21,7 +21,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.expression import select, text
 
 from app import xray
-from app.db.base import Base
+from app.db.base import Base, IS_SQLITE
 from app.models.node import NodeStatus
 from app.models.proxy import (
     ProxyHostALPN,
@@ -62,7 +62,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    username = Column(String(34, collation='NOCASE'), unique=True, index=True)
+    username = Column(String(34, collation='NOCASE' if IS_SQLITE else None), unique=True, index=True)
     proxies = relationship("Proxy", back_populates="user", cascade="all, delete-orphan")
     status = Column(Enum(UserStatus), nullable=False, default=UserStatus.active)
     used_traffic = Column(BigInteger, default=0)
@@ -91,6 +91,11 @@ class User(Base):
     # * Negative values: User won't be deleted automatically at all.
     # * NULL: Uses global settings.
     auto_delete_in_days = Column(Integer, nullable=True, default=None)
+
+    # Connection limit: maximum number of concurrent connections allowed
+    # * Positive values: Limits connections to this number.
+    # * 0 or NULL: No limit (unlimited connections).
+    connection_limit = Column(Integer, nullable=True, default=None)
 
     edit_at = Column(DateTime, nullable=True, default=None)
     last_status_change = Column(DateTime, default=datetime.utcnow, nullable=True)
@@ -295,7 +300,7 @@ class Node(Base):
     __tablename__ = "nodes"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(256, collation='NOCASE'), unique=True)
+    name = Column(String(256, collation='NOCASE' if IS_SQLITE else None), unique=True)
     address = Column(String(256), unique=False, nullable=False)
     port = Column(Integer, unique=False, nullable=False)
     api_port = Column(Integer, unique=False, nullable=False)

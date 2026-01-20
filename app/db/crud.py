@@ -390,6 +390,7 @@ def create_user(db: Session, user: UserCreate, admin: Admin = None) -> User:
         on_hold_expire_duration=(user.on_hold_expire_duration or None),
         on_hold_timeout=(user.on_hold_timeout or None),
         auto_delete_in_days=user.auto_delete_in_days,
+        connection_limit=(user.connection_limit or None),
         next_plan=NextPlan(
             data_limit=user.next_plan.data_limit,
             expire=user.next_plan.expire,
@@ -514,6 +515,9 @@ def update_user(db: Session, dbuser: User, modify: UserModify) -> User:
 
     if modify.on_hold_expire_duration is not None:
         dbuser.on_hold_expire_duration = modify.on_hold_expire_duration
+
+    if modify.connection_limit is not None:
+        dbuser.connection_limit = modify.connection_limit or None
 
     if modify.next_plan is not None:
         dbuser.next_plan = NextPlan(
@@ -1498,3 +1502,16 @@ def count_online_users(db: Session, hours: int = 24):
     query = db.query(func.count(User.id)).filter(User.online_at.isnot(
         None), User.online_at >= twenty_four_hours_ago)
     return query.scalar()
+
+
+def count_admins(db: Session) -> int:
+    """
+    Counts total number of admins in the database.
+
+    Args:
+        db (Session): Database session.
+
+    Returns:
+        int: Total count of admins.
+    """
+    return db.query(Admin).count()

@@ -7,6 +7,8 @@ from config import (
 )
 
 IS_SQLITE = SQLALCHEMY_DATABASE_URL.startswith('sqlite')
+IS_POSTGRESQL = SQLALCHEMY_DATABASE_URL.startswith('postgresql')
+IS_MYSQL = SQLALCHEMY_DATABASE_URL.startswith('mysql')
 
 if IS_SQLITE:
     engine = create_engine(
@@ -19,7 +21,8 @@ else:
         pool_size=SQLALCHEMY_POOL_SIZE,
         max_overflow=SQLIALCHEMY_MAX_OVERFLOW,
         pool_recycle=3600,
-        pool_timeout=10
+        pool_timeout=10,
+        pool_pre_ping=True
     )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -75,6 +75,9 @@ class User(BaseModel):
 
     auto_delete_in_days: Optional[int] = Field(None, nullable=True)
 
+    # Connection limit: maximum number of concurrent connections allowed
+    connection_limit: Optional[int] = Field(None, nullable=True, ge=0)
+
     next_plan: Optional[NextPlanModel] = Field(None, nullable=True)
 
     @field_validator('data_limit', mode='before')
@@ -148,6 +151,7 @@ class UserCreate(User):
             "note": "",
             "on_hold_timeout": "2023-11-03T20:30:00",
             "on_hold_expire_duration": 0,
+            "connection_limit": 0,
         }
     })
 
@@ -229,6 +233,7 @@ class UserModify(User):
             "note": "",
             "on_hold_timeout": "2023-11-03T20:30:00",
             "on_hold_expire_duration": 0,
+            "connection_limit": 0,
         }
     })
 

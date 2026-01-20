@@ -131,6 +131,9 @@ NOTIFY_DAYS_LEFT = config(
 
 DISABLE_RECORDING_NODE_USAGE = config("DISABLE_RECORDING_NODE_USAGE", cast=bool, default=False)
 
+# Default connection limit for users (0 = unlimited)
+DEFAULT_USER_CONNECTION_LIMIT = config("DEFAULT_USER_CONNECTION_LIMIT", cast=int, default=0)
+
 # headers: profile-update-interval, support-url, profile-title
 SUB_UPDATE_INTERVAL = config("SUB_UPDATE_INTERVAL", default="12")
 SUB_SUPPORT_URL = config("SUB_SUPPORT_URL", default="https://t.me/")

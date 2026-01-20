@@ -185,6 +185,8 @@
   "userDialog.vmessDesc": "سریع و امن",
   "userDialog.warningNoProtocol": "لطفا حداقل یک پروتکل انتخاب کنید",
   "userDialog.weeks": "هفته‌ها",
+  "userDialog.connectionLimit": "محدودیت اتصال",
+  "userDialog.connectionLimitHelp": "حداکثر اتصالات همزمان (0 = نامحدود)",
   "username": "نام کاربری",
   "users": "کاربران",
   "usersTable.copied": "کپی شد",

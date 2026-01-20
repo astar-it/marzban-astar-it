@@ -50,6 +50,7 @@ export type User = {
   inbounds: UserInbounds;
   note: string;
   online_at: string;
+  connection_limit: number | null;
 };
 
 export type UserCreate = Pick<
@@ -63,6 +64,7 @@ export type UserCreate = Pick<
   | "username"
   | "status"
   | "note"
+  | "connection_limit"
 >;
 
 export type UserApi = {
