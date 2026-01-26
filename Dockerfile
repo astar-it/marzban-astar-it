@@ -49,4 +49,47 @@ RUN if grep -q "YOUR_PRIVATE_KEY_HERE" /code/xray_config.json; then \
 RUN ln -s /code/marzban-cli.py /usr/bin/marzban-cli \
     && chmod +x /usr/bin/marzban-cli
 
-CMD ["bash", "-c", "alembic upgrade head; python main.py"]
+# Install openssl for certificate generation
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+
+# Startup script that generates certs if needed and runs the app
+COPY <<'EOF' /code/entrypoint.sh
+#!/bin/bash
+set -e
+
+CERT_DIR="/var/lib/marzban/certs"
+CERT_FILE="$CERT_DIR/fullchain.pem"
+KEY_FILE="$CERT_DIR/key.pem"
+
+# Create certs directory if not exists
+mkdir -p "$CERT_DIR"
+
+# Generate self-signed certificate if not exists
+if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+    echo "========================================"
+    echo "Generating self-signed TLS certificate..."
+    echo "========================================"
+    openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes \
+        -keyout "$KEY_FILE" \
+        -out "$CERT_FILE" \
+        -subj "/CN=marzban" \
+        -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+    echo "Certificate generated. Replace with real cert for production!"
+fi
+
+# Show Reality public key if available
+if [ -f "/code/reality_public_key.txt" ]; then
+    echo "========================================"
+    echo "Reality Public Key for clients:"
+    cat /code/reality_public_key.txt
+    echo "========================================"
+fi
+
+# Run migrations and start app
+alembic upgrade head
+exec python main.py
+EOF
+
+RUN chmod +x /code/entrypoint.sh
+
+CMD ["/code/entrypoint.sh"]
