@@ -33,19 +33,20 @@ COPY . /code
 # Generate Reality keys and update xray_config.json if placeholder exists
 RUN if grep -q "YOUR_PRIVATE_KEY_HERE" /code/xray_config.json; then \
         KEYS=$(/usr/local/bin/xray x25519) && \
-        PRIVATE_KEY=$(echo "$KEYS" | grep "Private key:" | cut -d' ' -f3) && \
-        PUBLIC_KEY=$(echo "$KEYS" | grep "Public key:" | cut -d' ' -f3) && \
+        PRIVATE_KEY=$(echo "$KEYS" | awk '/Private key:/ {print $3}') && \
+        PUBLIC_KEY=$(echo "$KEYS" | awk '/Public key:/ {print $3}') && \
         sed -i "s/YOUR_PRIVATE_KEY_HERE/$PRIVATE_KEY/g" /code/xray_config.json && \
         sed -i "s/YOUR_PUBLIC_KEY_HERE/$PUBLIC_KEY/g" /code/xray_config.json && \
         echo "======================================" && \
         echo "Reality keys generated automatically!" && \
-        echo "Public key for clients: $PUBLIC_KEY" && \
+        echo "Private key: $PRIVATE_KEY" && \
+        echo "Public key: $PUBLIC_KEY" && \
         echo "======================================" && \
         echo "$PUBLIC_KEY" > /code/reality_public_key.txt; \
     fi
 
+# Create marzban-cli symlink (skip completion install as it requires full app initialization)
 RUN ln -s /code/marzban-cli.py /usr/bin/marzban-cli \
-    && chmod +x /usr/bin/marzban-cli \
-    && marzban-cli completion install --shell bash
+    && chmod +x /usr/bin/marzban-cli
 
 CMD ["bash", "-c", "alembic upgrade head; python main.py"]
