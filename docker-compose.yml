@@ -1,8 +1,13 @@
 services:
   marzban:
-    image: gozargah/marzban:latest
+    build: .
     restart: always
     env_file: .env
-    network_mode: host
+    ports:
+      - "8000:8000"    # Dashboard/API
+      - "1080:1080"    # Shadowsocks TCP/UDP
+      - "443:443"      # HTTPS/VLESS/Trojan (optional)
+      - "8080:8080"    # HTTP/VMess (optional)
     volumes:
       - /var/lib/marzban:/var/lib/marzban
+      - ./xray_config.json:/code/xray_config.json
