@@ -1,8 +1,11 @@
 ARG PYTHON_VERSION=3.12
+# Build version to invalidate cache when code changes
+ARG BUILD_VERSION=20260126-v2
 
 FROM python:$PYTHON_VERSION-slim AS build
 
 ENV PYTHONUNBUFFERED=1
+ENV BUILD_VERSION=$BUILD_VERSION
 
 WORKDIR /code
 
