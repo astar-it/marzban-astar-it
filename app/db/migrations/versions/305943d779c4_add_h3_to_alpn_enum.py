@@ -48,9 +48,10 @@ def upgrade():
     
     if impl == 'postgresql':
         # For PostgreSQL: use ALTER TYPE ... ADD VALUE (simpler and works better)
-        op.execute("ALTER TYPE alpn ADD VALUE IF NOT EXISTS 'h3'")
-        op.execute("ALTER TYPE alpn ADD VALUE IF NOT EXISTS 'h3,h2'")
-        op.execute("ALTER TYPE alpn ADD VALUE IF NOT EXISTS 'h3,h2,http/1.1'")
+        # Note: the actual type name in PostgreSQL is 'proxyhostalpn' not 'alpn'
+        op.execute("ALTER TYPE proxyhostalpn ADD VALUE IF NOT EXISTS 'h3'")
+        op.execute("ALTER TYPE proxyhostalpn ADD VALUE IF NOT EXISTS 'h3,h2'")
+        op.execute("ALTER TYPE proxyhostalpn ADD VALUE IF NOT EXISTS 'h3,h2,http/1.1'")
     else:
         # For SQLite: use batch_alter_table approach
         temp_type.create(bind, checkfirst=True)
