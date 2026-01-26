@@ -106,6 +106,56 @@
 - پشتیبانی از **PostgreSQL**، MySQL، MariaDB و SQLite
 - **ایجاد خودکار مدیر** در اولین ورود
 - **کنترل تعداد اتصالات** برای کاربران
+- **پروتکل‌های عبور از فیلتر** - VLESS Reality، gRPC، WebSocket و غیره
+
+## پروتکل‌های عبور از فیلتر (ایران/روسیه)
+
+این فورک شامل پروتکل‌های از پیش تنظیم شده برای عبور از DPI و فیلترینگ است:
+
+| پروتکل | پورت | ترنسپورت | کارایی |
+|--------|------|----------|--------|
+| **VLESS TCP Reality** | 443 | TCP | ⭐⭐⭐⭐⭐ |
+| **VLESS gRPC Reality** | 2053 | gRPC | ⭐⭐⭐⭐⭐ |
+| **VLESS H2 Reality** | 2083 | HTTP/2 | ⭐⭐⭐⭐⭐ |
+| VLESS WebSocket TLS | 2087 | WebSocket | ⭐⭐⭐⭐ |
+| VLESS gRPC TLS | 2096 | gRPC | ⭐⭐⭐⭐ |
+| VMess WebSocket TLS | 2082 | WebSocket | ⭐⭐⭐ |
+| VMess gRPC TLS | 2086 | gRPC | ⭐⭐⭐ |
+| Trojan WebSocket TLS | 2084 | WebSocket | ⭐⭐⭐⭐ |
+| Trojan gRPC TLS | 2085 | gRPC | ⭐⭐⭐⭐ |
+| Shadowsocks | 1080 | TCP/UDP | ⭐⭐ |
+
+### تنظیم Reality (توصیه شده برای ایران)
+
+Reality موثرترین پروتکل برای عبور از فیلترینگ است. ترافیک مانند HTTPS عادی به سایت‌های معتبر به نظر می‌رسد.
+
+**۱. کلیدها را ایجاد کنید:**
+```bash
+docker exec marzban xray x25519
+```
+
+خروجی:
+```
+Private key: MC4CAQAwBQYDK2VuBCIEI...
+Public key: MCowBQYDK2VuAyEA...
+```
+
+**۲. فایل `xray_config.json` را ویرایش کنید:**
+
+`YOUR_PRIVATE_KEY_HERE` را با کلید خصوصی خود در همه inbound های Reality جایگزین کنید.
+
+**۳. تنظیمات هاست در پنل:**
+
+در تنظیمات هاست، کلید عمومی و SNI (مثلاً `www.google.com`) را وارد کنید.
+
+### SNI های پیشنهادی برای ایران
+
+از دامنه‌های شرکت‌های بزرگ که مسدود نشده‌اند استفاده کنید:
+- `www.google.com`, `google.com`
+- `www.microsoft.com`, `microsoft.com`
+- `www.cloudflare.com`, `cloudflare.com`
+- `www.apple.com`, `apple.com`
+- `www.yahoo.com`, `yahoo.com`
 
 # راهنمای نصب
 

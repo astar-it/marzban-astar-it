@@ -108,6 +108,56 @@ Marzban is user-friendly, feature-rich and reliable. It lets you to create diffe
 - **PostgreSQL**, MySQL, MariaDB and SQLite database support
 - **Automatic admin creation** on first login
 - **Connection limit** control for users
+- **Anti-blocking protocols** - VLESS Reality, gRPC, WebSocket and more
+
+## Anti-Blocking Protocols (Russia/Iran)
+
+This fork includes pre-configured protocols to bypass DPI and network blocking:
+
+| Protocol | Port | Transport | Effectiveness |
+|----------|------|-----------|---------------|
+| **VLESS TCP Reality** | 443 | TCP | ⭐⭐⭐⭐⭐ |
+| **VLESS gRPC Reality** | 2053 | gRPC | ⭐⭐⭐⭐⭐ |
+| **VLESS H2 Reality** | 2083 | HTTP/2 | ⭐⭐⭐⭐⭐ |
+| VLESS WebSocket TLS | 2087 | WebSocket | ⭐⭐⭐⭐ |
+| VLESS gRPC TLS | 2096 | gRPC | ⭐⭐⭐⭐ |
+| VMess WebSocket TLS | 2082 | WebSocket | ⭐⭐⭐ |
+| VMess gRPC TLS | 2086 | gRPC | ⭐⭐⭐ |
+| Trojan WebSocket TLS | 2084 | WebSocket | ⭐⭐⭐⭐ |
+| Trojan gRPC TLS | 2085 | gRPC | ⭐⭐⭐⭐ |
+| Shadowsocks | 1080 | TCP/UDP | ⭐⭐ |
+
+### Setting Up Reality (Recommended)
+
+Reality is the most effective protocol for bypassing blocks. Traffic appears as regular HTTPS to popular websites.
+
+**1. Generate keys:**
+```bash
+docker exec marzban xray x25519
+```
+
+Output:
+```
+Private key: MC4CAQAwBQYDK2VuBCIEI...
+Public key: MCowBQYDK2VuAyEA...
+```
+
+**2. Edit `xray_config.json`:**
+
+Replace `YOUR_PRIVATE_KEY_HERE` with your private key in all Reality inbounds.
+
+**3. Configure hosts in admin panel:**
+
+In host settings, enter the public key and SNI (e.g., `www.google.com`).
+
+### Recommended SNI Domains
+
+Use domains of major companies that are not blocked:
+- `www.google.com`, `google.com`
+- `www.microsoft.com`, `microsoft.com`
+- `www.cloudflare.com`, `cloudflare.com`
+- `www.apple.com`, `apple.com`
+- `www.amazon.com`, `amazon.com`
 
 # Installation guide
 

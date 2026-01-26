@@ -105,7 +105,56 @@ Marzban 是一个用户友好、功能丰富且可靠的工具。它让您可以
 - 支持 **PostgreSQL**、MySQL、MariaDB 和 SQLite 数据库
 - **首次登录自动创建管理员**
 - 用户**连接数限制**控制
+- **反封锁协议** - VLESS Reality、gRPC、WebSocket 等
 
+## 反封锁协议（俄罗斯/伊朗）
+
+此分支包含预配置的协议，用于绕过 DPI 和网络封锁：
+
+| 协议 | 端口 | 传输方式 | 有效性 |
+|------|------|----------|--------|
+| **VLESS TCP Reality** | 443 | TCP | ⭐⭐⭐⭐⭐ |
+| **VLESS gRPC Reality** | 2053 | gRPC | ⭐⭐⭐⭐⭐ |
+| **VLESS H2 Reality** | 2083 | HTTP/2 | ⭐⭐⭐⭐⭐ |
+| VLESS WebSocket TLS | 2087 | WebSocket | ⭐⭐⭐⭐ |
+| VLESS gRPC TLS | 2096 | gRPC | ⭐⭐⭐⭐ |
+| VMess WebSocket TLS | 2082 | WebSocket | ⭐⭐⭐ |
+| VMess gRPC TLS | 2086 | gRPC | ⭐⭐⭐ |
+| Trojan WebSocket TLS | 2084 | WebSocket | ⭐⭐⭐⭐ |
+| Trojan gRPC TLS | 2085 | gRPC | ⭐⭐⭐⭐ |
+| Shadowsocks | 1080 | TCP/UDP | ⭐⭐ |
+
+### 配置 Reality（推荐）
+
+Reality 是绕过封锁最有效的协议。流量看起来像是普通的 HTTPS 流量到热门网站。
+
+**1. 生成密钥：**
+```bash
+docker exec marzban xray x25519
+```
+
+输出：
+```
+Private key: MC4CAQAwBQYDK2VuBCIEI...
+Public key: MCowBQYDK2VuAyEA...
+```
+
+**2. 编辑 `xray_config.json`：**
+
+将所有 Reality inbound 中的 `YOUR_PRIVATE_KEY_HERE` 替换为您的私钥。
+
+**3. 在管理面板中配置主机：**
+
+在主机设置中，输入公钥和 SNI（例如 `www.google.com`）。
+
+### 推荐的 SNI
+
+使用不会被封锁的大公司域名：
+- `www.google.com`, `google.com`
+- `www.microsoft.com`, `microsoft.com`
+- `www.cloudflare.com`, `cloudflare.com`
+- `www.apple.com`, `apple.com`
+- `www.amazon.com`, `amazon.com`
 
 # 安装指南
 运行以下命令以使用 SQLite 数据库安装 Marzban。

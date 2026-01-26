@@ -108,6 +108,56 @@ Marzban удобен в использовании, многофункциона
 - Поддержка **PostgreSQL**, MySQL, MariaDB и SQLite
 - **Автоматическое создание администратора** при первом входе
 - **Контроль подключений** - ограничение одновременных соединений для пользователей
+- **Протоколы обхода блокировок** - VLESS Reality, gRPC, WebSocket и другие
+
+## Протоколы для обхода блокировок (Россия/Иран)
+
+Данный форк включает предустановленные протоколы для обхода DPI и ТСПУ:
+
+| Протокол | Порт | Транспорт | Эффективность |
+|----------|------|-----------|---------------|
+| **VLESS TCP Reality** | 443 | TCP | ⭐⭐⭐⭐⭐ |
+| **VLESS gRPC Reality** | 2053 | gRPC | ⭐⭐⭐⭐⭐ |
+| **VLESS H2 Reality** | 2083 | HTTP/2 | ⭐⭐⭐⭐⭐ |
+| VLESS WebSocket TLS | 2087 | WebSocket | ⭐⭐⭐⭐ |
+| VLESS gRPC TLS | 2096 | gRPC | ⭐⭐⭐⭐ |
+| VMess WebSocket TLS | 2082 | WebSocket | ⭐⭐⭐ |
+| VMess gRPC TLS | 2086 | gRPC | ⭐⭐⭐ |
+| Trojan WebSocket TLS | 2084 | WebSocket | ⭐⭐⭐⭐ |
+| Trojan gRPC TLS | 2085 | gRPC | ⭐⭐⭐⭐ |
+| Shadowsocks | 1080 | TCP/UDP | ⭐⭐ |
+
+### Настройка Reality (рекомендуется для России)
+
+Reality — самый эффективный протокол для обхода блокировок. Трафик выглядит как обычный HTTPS к популярным сайтам.
+
+**1. Сгенерируйте ключи:**
+```bash
+docker exec marzban xray x25519
+```
+
+Результат:
+```
+Private key: MC4CAQAwBQYDK2VuBCIEI...
+Public key: MCowBQYDK2VuAyEA...
+```
+
+**2. Отредактируйте `xray_config.json`:**
+
+Замените `YOUR_PRIVATE_KEY_HERE` на ваш приватный ключ во всех Reality inbound.
+
+**3. Настройте хосты в админке:**
+
+В настройках хостов укажите публичный ключ и SNI (например, `www.google.com`).
+
+### Рекомендуемые SNI для России
+
+Используйте домены крупных компаний, которые не блокируются:
+- `www.google.com`, `google.com`
+- `www.microsoft.com`, `microsoft.com`
+- `www.cloudflare.com`, `cloudflare.com`
+- `www.apple.com`, `apple.com`
+- `www.youtube.com`, `youtube.com`
 
 # Руководство по установке
 
