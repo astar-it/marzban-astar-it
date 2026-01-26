@@ -7,7 +7,7 @@ from pathlib import PosixPath
 from typing import Union
 
 import commentjson
-from sqlalchemy import func, literal_column
+from sqlalchemy import func, literal_column, cast, String
 
 from app.db import GetDB
 from app.db import models as db_models
@@ -27,6 +27,17 @@ def db_group_concat(column):
     if IS_POSTGRESQL:
         return func.string_agg(column, literal_column("','"))
     return func.group_concat(column)
+
+
+def db_lower_enum(column):
+    """Database-agnostic lowercase function for ENUM types.
+    
+    PostgreSQL requires casting ENUM to text before applying lower()
+    SQLite/MySQL can apply lower() directly
+    """
+    if IS_POSTGRESQL:
+        return func.lower(cast(column, String))
+    return func.lower(column)
 
 
 def merge_dicts(a, b):  # B will override A dictionary key and values
@@ -377,7 +388,7 @@ class XRayConfig(dict):
             query = db.query(
                 db_models.User.id,
                 db_models.User.username,
-                func.lower(db_models.Proxy.type).label('type'),
+                db_lower_enum(db_models.Proxy.type).label('type'),
                 db_models.Proxy.settings,
                 db_group_concat(db_models.excluded_inbounds_association.c.inbound_tag).label('excluded_inbound_tags')
             ).join(
@@ -388,7 +399,7 @@ class XRayConfig(dict):
             ).filter(
                 db_models.User.status.in_([UserStatus.active, UserStatus.on_hold])
             ).group_by(
-                func.lower(db_models.Proxy.type),
+                db_lower_enum(db_models.Proxy.type),
                 db_models.User.id,
                 db_models.User.username,
                 db_models.Proxy.settings,
