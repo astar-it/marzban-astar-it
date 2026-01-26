@@ -43,37 +43,38 @@ temp_table = sa.sql.table(
 
 
 def upgrade():
-    # temp type to use instead of old one
-    temp_type.create(op.get_bind(), checkfirst=False)
+    bind = op.get_bind()
+    impl = bind.dialect.name
+    
+    if impl == 'postgresql':
+        # For PostgreSQL: use ALTER TYPE ... ADD VALUE (simpler and works better)
+        op.execute("ALTER TYPE alpn ADD VALUE IF NOT EXISTS 'h3'")
+        op.execute("ALTER TYPE alpn ADD VALUE IF NOT EXISTS 'h3,h2'")
+        op.execute("ALTER TYPE alpn ADD VALUE IF NOT EXISTS 'h3,h2,http/1.1'")
+    else:
+        # For SQLite: use batch_alter_table approach
+        temp_type.create(bind, checkfirst=True)
+        
+        with op.batch_alter_table(table_name) as batch_op:
+            batch_op.alter_column(
+                column_name,
+                existing_type=old_type,
+                type_=temp_type,
+                existing_nullable=False
+            )
 
-    # changing of column type from old enum to new one.
-    # SQLite will create temp table for this
-    with op.batch_alter_table(table_name) as batch_op:
-        batch_op.alter_column(
-            column_name,
-            existing_type=old_type,
-            type_=temp_type,
-            existing_nullable=False,
-            postgresql_using=f"{column_name}::text::{temp_enum_name}"
-        )
+        old_type.drop(bind, checkfirst=True)
+        new_type.create(bind, checkfirst=True)
 
-    # remove old enum, create new enum
-    old_type.drop(op.get_bind(), checkfirst=False)
-    new_type.create(op.get_bind(), checkfirst=False)
+        with op.batch_alter_table(table_name) as batch_op:
+            batch_op.alter_column(
+                column_name,
+                existing_type=temp_type,
+                type_=new_type,
+                existing_nullable=False
+            )
 
-    # changing of column type from temp enum to new one.
-    # SQLite will create temp table for this
-    with op.batch_alter_table(table_name) as batch_op:
-        batch_op.alter_column(
-            column_name,
-            existing_type=temp_type,
-            type_=new_type,
-            existing_nullable=False,
-            postgresql_using=f"{column_name}::text::{enum_name}"
-        )
-
-    # remove temp enum
-    temp_type.drop(op.get_bind(), checkfirst=False)
+        temp_type.drop(bind, checkfirst=True)
 
 
 def downgrade():
