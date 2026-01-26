@@ -6,18 +6,24 @@ from config import (
     SQLIALCHEMY_MAX_OVERFLOW,
 )
 
-IS_SQLITE = SQLALCHEMY_DATABASE_URL.startswith('sqlite')
-IS_POSTGRESQL = SQLALCHEMY_DATABASE_URL.startswith('postgresql')
-IS_MYSQL = SQLALCHEMY_DATABASE_URL.startswith('mysql')
+# Fix for postgres:// URLs - SQLAlchemy 1.4+ requires postgresql://
+# This handles common URLs from services like Heroku, Render, etc.
+_DB_URL = SQLALCHEMY_DATABASE_URL
+if _DB_URL.startswith('postgres://'):
+    _DB_URL = _DB_URL.replace('postgres://', 'postgresql://', 1)
+
+IS_SQLITE = _DB_URL.startswith('sqlite')
+IS_POSTGRESQL = _DB_URL.startswith('postgresql')
+IS_MYSQL = _DB_URL.startswith('mysql')
 
 if IS_SQLITE:
     engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
+        _DB_URL,
         connect_args={"check_same_thread": False}
     )
 else:
     engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
+        _DB_URL,
         pool_size=SQLALCHEMY_POOL_SIZE,
         max_overflow=SQLIALCHEMY_MAX_OVERFLOW,
         pool_recycle=3600,
