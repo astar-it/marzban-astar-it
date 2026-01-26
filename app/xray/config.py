@@ -396,11 +396,14 @@ class XRayConfig(dict):
         config = self.copy()
 
         with GetDB() as db:
+            # For PostgreSQL, we need to use the same expression in SELECT and GROUP BY
+            settings_expr = db_json_for_groupby(db_models.Proxy.settings)
+            
             query = db.query(
                 db_models.User.id,
                 db_models.User.username,
                 db_lower_enum(db_models.Proxy.type).label('type'),
-                db_models.Proxy.settings,
+                settings_expr.label('settings'),
                 db_group_concat(db_models.excluded_inbounds_association.c.inbound_tag).label('excluded_inbound_tags')
             ).join(
                 db_models.Proxy, db_models.User.id == db_models.Proxy.user_id
@@ -413,17 +416,22 @@ class XRayConfig(dict):
                 db_lower_enum(db_models.Proxy.type),
                 db_models.User.id,
                 db_models.User.username,
-                db_json_for_groupby(db_models.Proxy.settings),
+                settings_expr,
             )
             result = query.all()
 
             grouped_data = defaultdict(list)
 
             for row in result:
+                # For PostgreSQL, settings is returned as string due to cast
+                settings = row.settings
+                if IS_POSTGRESQL and isinstance(settings, str):
+                    settings = json.loads(settings)
+                
                 grouped_data[row.type].append((
                     row.id,
                     row.username,
-                    row.settings,
+                    settings,
                     [i for i in row.excluded_inbound_tags.split(',') if i] if row.excluded_inbound_tags else None
                 ))
 
