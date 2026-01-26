@@ -3,17 +3,298 @@
     "loglevel": "warning"
   },
   "routing": {
+    "domainStrategy": "IPIfNonMatch",
     "rules": [
       {
-        "ip": [
-          "geoip:private"
-        ],
+        "ip": ["geoip:private"],
+        "outboundTag": "BLOCK",
+        "type": "field"
+      },
+      {
+        "domain": ["geosite:category-ads-all"],
         "outboundTag": "BLOCK",
         "type": "field"
       }
     ]
   },
   "inbounds": [
+    {
+      "tag": "VLESS TCP REALITY",
+      "listen": "0.0.0.0",
+      "port": 443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "tcpSettings": {},
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "www.google.com:443",
+          "xver": 0,
+          "serverNames": [
+            "www.google.com",
+            "google.com",
+            "www.microsoft.com",
+            "microsoft.com",
+            "www.cloudflare.com",
+            "cloudflare.com"
+          ],
+          "privateKey": "YOUR_PRIVATE_KEY_HERE",
+          "shortIds": ["", "0123456789abcdef"]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"]
+      }
+    },
+    {
+      "tag": "VLESS GRPC REALITY",
+      "listen": "0.0.0.0",
+      "port": 2053,
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "grpc"
+        },
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "www.google.com:443",
+          "xver": 0,
+          "serverNames": [
+            "www.google.com",
+            "google.com",
+            "www.microsoft.com",
+            "www.cloudflare.com"
+          ],
+          "privateKey": "YOUR_PRIVATE_KEY_HERE",
+          "shortIds": ["", "0123456789abcdef"]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"]
+      }
+    },
+    {
+      "tag": "VLESS H2 REALITY",
+      "listen": "0.0.0.0",
+      "port": 2083,
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "h2",
+        "httpSettings": {
+          "host": ["www.google.com"],
+          "path": "/"
+        },
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "www.google.com:443",
+          "xver": 0,
+          "serverNames": [
+            "www.google.com",
+            "google.com"
+          ],
+          "privateKey": "YOUR_PRIVATE_KEY_HERE",
+          "shortIds": ["", "0123456789abcdef"]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"]
+      }
+    },
+    {
+      "tag": "VLESS WS TLS",
+      "listen": "0.0.0.0",
+      "port": 2087,
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/vless-ws"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "",
+          "certificates": [
+            {
+              "certificateFile": "/var/lib/marzban/certs/fullchain.pem",
+              "keyFile": "/var/lib/marzban/certs/privkey.pem"
+            }
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      }
+    },
+    {
+      "tag": "VLESS GRPC TLS",
+      "listen": "0.0.0.0",
+      "port": 2096,
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "vless-grpc"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "",
+          "certificates": [
+            {
+              "certificateFile": "/var/lib/marzban/certs/fullchain.pem",
+              "keyFile": "/var/lib/marzban/certs/privkey.pem"
+            }
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      }
+    },
+    {
+      "tag": "VMESS WS TLS",
+      "listen": "0.0.0.0",
+      "port": 2082,
+      "protocol": "vmess",
+      "settings": {
+        "clients": []
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/vmess-ws"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "",
+          "certificates": [
+            {
+              "certificateFile": "/var/lib/marzban/certs/fullchain.pem",
+              "keyFile": "/var/lib/marzban/certs/privkey.pem"
+            }
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      }
+    },
+    {
+      "tag": "VMESS GRPC TLS",
+      "listen": "0.0.0.0",
+      "port": 2086,
+      "protocol": "vmess",
+      "settings": {
+        "clients": []
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "vmess-grpc"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "",
+          "certificates": [
+            {
+              "certificateFile": "/var/lib/marzban/certs/fullchain.pem",
+              "keyFile": "/var/lib/marzban/certs/privkey.pem"
+            }
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      }
+    },
+    {
+      "tag": "TROJAN WS TLS",
+      "listen": "0.0.0.0",
+      "port": 2084,
+      "protocol": "trojan",
+      "settings": {
+        "clients": []
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/trojan-ws"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "",
+          "certificates": [
+            {
+              "certificateFile": "/var/lib/marzban/certs/fullchain.pem",
+              "keyFile": "/var/lib/marzban/certs/privkey.pem"
+            }
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      }
+    },
+    {
+      "tag": "TROJAN GRPC TLS",
+      "listen": "0.0.0.0",
+      "port": 2085,
+      "protocol": "trojan",
+      "settings": {
+        "clients": []
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "grpcSettings": {
+          "serviceName": "trojan-grpc"
+        },
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "",
+          "certificates": [
+            {
+              "certificateFile": "/var/lib/marzban/certs/fullchain.pem",
+              "keyFile": "/var/lib/marzban/certs/privkey.pem"
+            }
+          ]
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      }
+    },
     {
       "tag": "Shadowsocks TCP",
       "listen": "0.0.0.0",
@@ -22,13 +303,20 @@
       "settings": {
         "clients": [],
         "network": "tcp,udp"
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
       }
     }
   ],
   "outbounds": [
     {
       "protocol": "freedom",
-      "tag": "DIRECT"
+      "tag": "DIRECT",
+      "settings": {
+        "domainStrategy": "UseIPv4"
+      }
     },
     {
       "protocol": "blackhole",

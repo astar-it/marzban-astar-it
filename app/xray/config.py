@@ -7,14 +7,26 @@ from pathlib import PosixPath
 from typing import Union
 
 import commentjson
-from sqlalchemy import func
+from sqlalchemy import func, literal_column
 
 from app.db import GetDB
 from app.db import models as db_models
+from app.db.base import IS_POSTGRESQL
 from app.models.proxy import ProxyTypes
 from app.models.user import UserStatus
 from app.utils.crypto import get_cert_SANs
 from config import DEBUG, XRAY_EXCLUDE_INBOUND_TAGS, XRAY_FALLBACKS_INBOUND_TAG
+
+
+def db_group_concat(column):
+    """Database-agnostic group concatenation function.
+    
+    PostgreSQL uses string_agg(column, ',')
+    SQLite/MySQL use group_concat(column)
+    """
+    if IS_POSTGRESQL:
+        return func.string_agg(column, literal_column("','"))
+    return func.group_concat(column)
 
 
 def merge_dicts(a, b):  # B will override A dictionary key and values
@@ -367,7 +379,7 @@ class XRayConfig(dict):
                 db_models.User.username,
                 func.lower(db_models.Proxy.type).label('type'),
                 db_models.Proxy.settings,
-                func.group_concat(db_models.excluded_inbounds_association.c.inbound_tag).label('excluded_inbound_tags')
+                db_group_concat(db_models.excluded_inbounds_association.c.inbound_tag).label('excluded_inbound_tags')
             ).join(
                 db_models.Proxy, db_models.User.id == db_models.Proxy.user_id
             ).outerjoin(

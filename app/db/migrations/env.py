@@ -11,7 +11,13 @@ from config import SQLALCHEMY_DATABASE_URL
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option('sqlalchemy.url', SQLALCHEMY_DATABASE_URL)
+
+# Fix for postgres:// URLs - SQLAlchemy 1.4+ requires postgresql://
+_db_url = SQLALCHEMY_DATABASE_URL
+if _db_url.startswith('postgres://'):
+    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+
+config.set_main_option('sqlalchemy.url', _db_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
