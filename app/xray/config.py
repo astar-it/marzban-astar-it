@@ -40,6 +40,17 @@ def db_lower_enum(column):
     return func.lower(column)
 
 
+def db_json_for_groupby(column):
+    """Cast JSON column for use in GROUP BY.
+    
+    PostgreSQL requires casting JSON to text for GROUP BY (no equality operator for json)
+    SQLite/MySQL can use JSON directly
+    """
+    if IS_POSTGRESQL:
+        return cast(column, String)
+    return column
+
+
 def merge_dicts(a, b):  # B will override A dictionary key and values
     for key, value in b.items():
         if isinstance(value, dict) and key in a and isinstance(a[key], dict):
@@ -402,7 +413,7 @@ class XRayConfig(dict):
                 db_lower_enum(db_models.Proxy.type),
                 db_models.User.id,
                 db_models.User.username,
-                db_models.Proxy.settings,
+                db_json_for_groupby(db_models.Proxy.settings),
             )
             result = query.all()
 
