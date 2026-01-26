@@ -26,7 +26,23 @@ COPY --from=build $PYTHON_LIB_PATH $PYTHON_LIB_PATH
 COPY --from=build /usr/local/bin /usr/local/bin
 COPY --from=build /usr/local/share/xray /usr/local/share/xray
 
+COPY --from=build /usr/local/bin/xray /usr/local/bin/xray
+
 COPY . /code
+
+# Generate Reality keys and update xray_config.json if placeholder exists
+RUN if grep -q "YOUR_PRIVATE_KEY_HERE" /code/xray_config.json; then \
+        KEYS=$(/usr/local/bin/xray x25519) && \
+        PRIVATE_KEY=$(echo "$KEYS" | grep "Private key:" | cut -d' ' -f3) && \
+        PUBLIC_KEY=$(echo "$KEYS" | grep "Public key:" | cut -d' ' -f3) && \
+        sed -i "s/YOUR_PRIVATE_KEY_HERE/$PRIVATE_KEY/g" /code/xray_config.json && \
+        sed -i "s/YOUR_PUBLIC_KEY_HERE/$PUBLIC_KEY/g" /code/xray_config.json && \
+        echo "======================================" && \
+        echo "Reality keys generated automatically!" && \
+        echo "Public key for clients: $PUBLIC_KEY" && \
+        echo "======================================" && \
+        echo "$PUBLIC_KEY" > /code/reality_public_key.txt; \
+    fi
 
 RUN ln -s /code/marzban-cli.py /usr/bin/marzban-cli \
     && chmod +x /usr/bin/marzban-cli \

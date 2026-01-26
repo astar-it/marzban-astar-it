@@ -44,6 +44,7 @@
             "cloudflare.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
+          "publicKey": "YOUR_PUBLIC_KEY_HERE",
           "shortIds": ["", "0123456789abcdef"]
         }
       },
@@ -78,6 +79,7 @@
             "www.cloudflare.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
+          "publicKey": "YOUR_PUBLIC_KEY_HERE",
           "shortIds": ["", "0123456789abcdef"]
         }
       },
@@ -111,6 +113,7 @@
             "google.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
+          "publicKey": "YOUR_PUBLIC_KEY_HERE",
           "shortIds": ["", "0123456789abcdef"]
         }
       },
