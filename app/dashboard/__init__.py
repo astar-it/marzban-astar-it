@@ -49,6 +49,14 @@ def run_build():
         StaticFiles(directory=statics_dir, html=True),
         name="statics"
     )
+    # Mount assets directory for dashboard JS/CSS files
+    assets_dir = build_dir / 'assets'
+    if assets_dir.is_dir():
+        app.mount(
+            '/assets/',
+            StaticFiles(directory=assets_dir),
+            name="assets"
+        )
 
 
 @app.on_event("startup")
