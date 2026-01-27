@@ -10,7 +10,7 @@ from app.utils.jwt import get_admin_payload
 from config import SUDOERS
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/admin/token")  # Admin view url
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/admin/token")  # Admin view url
 
 
 class Token(BaseModel):

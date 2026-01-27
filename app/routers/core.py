@@ -14,7 +14,7 @@ from app.utils import responses
 from app.xray import XRayConfig
 from config import XRAY_JSON
 
-router = APIRouter(tags=["Core"], prefix="/api", responses={401: responses._401})
+router = APIRouter(tags=["Core"], responses={401: responses._401})
 
 
 @router.websocket("/core/logs")

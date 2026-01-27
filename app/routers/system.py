@@ -11,7 +11,7 @@ from app.models.user import UserStatus
 from app.utils import responses
 from app.utils.system import cpu_usage, memory_usage, realtime_bandwidth
 
-router = APIRouter(tags=["System"], prefix="/api", responses={401: responses._401})
+router = APIRouter(tags=["System"], responses={401: responses._401})
 
 
 @router.get("/system", response_model=SystemStats)

@@ -22,7 +22,7 @@ from app.models.proxy import ProxyHost
 from app.utils import responses
 
 router = APIRouter(
-    tags=["Node"], prefix="/api", responses={401: responses._401, 403: responses._403}
+    tags=["Node"], responses={401: responses._401, 403: responses._403}
 )
 
 
