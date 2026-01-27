@@ -4,7 +4,7 @@ Thanks for considering contributing to Marzban!
 ## Questions
 
 Please don't ask your questions in issues. Instead, use one of the following ways to ask:
-- Ask on our telegram group: [@Gozargah_Marzban](https://t.me/gozargah_marzban)
+- Ask on our telegram group: [@Astar-IT_Marzban](https://t.me/Astar-IT_marzban)
 - Ask on our [GitHub Discussions](https://github.com/Astar-IT/Marzban-astar-it/discussions) for long term discussion or larger questions.
 
 

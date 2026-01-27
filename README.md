@@ -1,8 +1,8 @@
 <p align="center">
   <a href="https://github.com/Astar-IT/Marzban-astar-it" target="_blank" rel="noopener noreferrer">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/logo-dark.png">
-      <img width="160" height="160" src="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/logo-light.png">
+      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/Astar-IT/Marzban-astar-it-docs/raw/master/screenshots/logo-dark.png">
+      <img width="160" height="160" src="https://github.com/Astar-IT/Marzban-astar-it-docs/raw/master/screenshots/logo-light.png">
     </picture>
   </a>
 </p>
@@ -16,22 +16,22 @@
 <br/>
 <p align="center">
     <a href="#">
-        <img src="https://img.shields.io/github/actions/workflow/status/gozargah/marzban/build.yml?style=flat-square" />
+        <img src="https://img.shields.io/github/actions/workflow/status/astar-it/marzban-astar-it/build.yml?style=flat-square" />
     </a>
-    <a href="https://hub.docker.com/r/gozargah/marzban" target="_blank">
-        <img src="https://img.shields.io/docker/pulls/gozargah/marzban?style=flat-square&logo=docker" />
+    <a href="https://hub.docker.com/r/astar-it/marzban-astar-it" target="_blank">
+        <img src="https://img.shields.io/docker/pulls/astar-it/marzban-astar-it?style=flat-square&logo=docker" />
     </a>
     <a href="#">
-        <img src="https://img.shields.io/github/license/gozargah/marzban?style=flat-square" />
+        <img src="https://img.shields.io/github/license/astar-it/marzban-astar-it?style=flat-square" />
     </a>
-    <a href="https://t.me/gozargah_marzban" target="_blank">
+    <a href="https://t.me/Astar-IT_marzban" target="_blank">
         <img src="https://img.shields.io/badge/telegram-group-blue?style=flat-square&logo=telegram" />
     </a>
     <a href="#">
         <img src="https://img.shields.io/badge/twitter-commiunity-blue?style=flat-square&logo=twitter" />
     </a>
     <a href="#">
-        <img src="https://img.shields.io/github/stars/gozargah/marzban?style=social" />
+        <img src="https://img.shields.io/github/stars/astar-it/marzban-astar-it?style=social" />
     </a>
 </p>
 
@@ -55,7 +55,7 @@
 
 <p align="center">
   <a href="https://github.com/Astar-IT/Marzban-astar-it" target="_blank" rel="noopener noreferrer" >
-    <img src="https://github.com/Gozargah/Marzban-docs/raw/master/screenshots/preview.png" alt="Marzban screenshots" width="600" height="auto">
+    <img src="https://github.com/Astar-IT/Marzban-astar-it-docs/raw/master/screenshots/preview.png" alt="Marzban screenshots" width="600" height="auto">
   </a>
 </p>
 
@@ -164,18 +164,18 @@ Use domains of major companies that are not blocked:
 Run the following command to install Marzban with SQLite database:
 
 ```bash
-sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install
+sudo bash -c "$(curl -sL https://github.com/Astar-IT/Marzban-astar-it/raw/master/marzban.sh)" @ install
 ```
 
 Run the following command to install Marzban with MySQL database:
 
 ```bash
-sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install --database mysql
+sudo bash -c "$(curl -sL https://github.com/Astar-IT/Marzban-astar-it/raw/master/marzban.sh)" @ install --database mysql
 ```
 
 Run the following command to install Marzban with MariaDB database:
 ```bash
-sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install --database mariadb
+sudo bash -c "$(curl -sL https://github.com/Astar-IT/Marzban-astar-it/raw/master/marzban.sh)" @ install --database mariadb
 ```
 
 ### PostgreSQL Installation (Manual Setup)
@@ -195,7 +195,7 @@ Once the installation is complete:
 - The Marzban files will be located at `/opt/marzban`
 - The configuration file can be found at `/opt/marzban/.env` (refer to [configurations](#configuration) section to see variables)
 - The data files will be placed at `/var/lib/marzban`
-- For security reasons, the Marzban dashboard is not accessible via IP address. Therefore, you must [obtain SSL certificate](https://gozargah.github.io/marzban/en/examples/issue-ssl-certificate) and access your Marzban dashboard by opening a web browser and navigating to `https://YOUR_DOMAIN:8000/dashboard/` (replace YOUR_DOMAIN with your actual domain)
+- For security reasons, the Marzban dashboard is not accessible via IP address. Therefore, you must [obtain SSL certificate](https://Astar-IT.github.io/marzban/en/examples/issue-ssl-certificate) and access your Marzban dashboard by opening a web browser and navigating to `https://YOUR_DOMAIN:8000/dashboard/` (replace YOUR_DOMAIN with your actual domain)
 - You can also use SSH port forwarding to access the Marzban dashboard locally without a domain. Replace `user@serverip` with your actual SSH username and server IP and Run the command below:
 
 ```bash
@@ -406,7 +406,7 @@ DEFAULT_USER_CONNECTION_LIMIT=2  # Limit to 2 connections by default
 
 # Documentation
 
-The [Marzban Documentation](https://gozargah.github.io/marzban) provides all the essential guides to get you started, available in three languages: Farsi, English, and Russian. This documentation requires significant effort to cover all aspects of the project comprehensively. We welcome and appreciate your contributions to help us improve it. You can contribute on this [GitHub repository](https://github.com/Gozargah/gozargah.github.io).
+The [Marzban Documentation](https://Astar-IT.github.io/marzban) provides all the essential guides to get you started, available in three languages: Farsi, English, and Russian. This documentation requires significant effort to cover all aspects of the project comprehensively. We welcome and appreciate your contributions to help us improve it. You can contribute on this [GitHub repository](https://github.com/Astar-IT/Astar-IT.github.io).
 
 
 # API
@@ -425,7 +425,7 @@ Marzban's backup service efficiently zips all necessary files and sends them to 
 
 Install the Latest Version of Marzban Command:
 ```bash
-sudo bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install-script
+sudo bash -c "$(curl -sL https://github.com/Astar-IT/Marzban-astar-it/raw/master/marzban.sh)" @ install-script
 ```
 
 Setup the Backup Service:
@@ -463,8 +463,8 @@ For more information, You can read [Marzban CLI's documentation](./cli/README.md
 
 # Marzban Node
 
-The Marzban project introduces the [Marzban-node](https://github.com/gozargah/marzban-node), which revolutionizes infrastructure distribution. With Marzban-node, you can distribute your infrastructure across multiple locations, unlocking benefits such as redundancy, high availability, scalability, flexibility. Marzban-node empowers users to connect to different servers, offering them the flexibility to choose and connect to multiple servers instead of being limited to only one server.
-For more detailed information and installation instructions, please refer to the [Marzban-node official documentation](https://github.com/gozargah/marzban-node)
+The Marzban project introduces the [Marzban-node](https://github.com/Astar-IT/Marzban-astar-it-node), which revolutionizes infrastructure distribution. With Marzban-node, you can distribute your infrastructure across multiple locations, unlocking benefits such as redundancy, high availability, scalability, flexibility. Marzban-node empowers users to connect to different servers, offering them the flexibility to choose and connect to multiple servers instead of being limited to only one server.
+For more detailed information and installation instructions, please refer to the [Marzban-node official documentation](https://github.com/Astar-IT/Marzban-astar-it-node)
 
 # Webhook notifications
 
@@ -513,7 +513,7 @@ Extended by [astar-it.com](https://astar-it.com)
 
 # Contributors
 
-We ❤️‍🔥 contributors! If you'd like to contribute, please check out our [Contributing Guidelines](CONTRIBUTING.md) and feel free to submit a pull request or open an issue. We also welcome you to join our [Telegram](https://t.me/gozargah_marzban) group for either support or contributing guidance.
+We ❤️‍🔥 contributors! If you'd like to contribute, please check out our [Contributing Guidelines](CONTRIBUTING.md) and feel free to submit a pull request or open an issue. We also welcome you to join our [Telegram](https://t.me/Astar-IT_marzban) group for either support or contributing guidance.
 
 Check [open issues](https://github.com/Astar-IT/Marzban-astar-it/issues) to help the progress of this project.
 
