@@ -270,7 +270,7 @@ def process_inbounds_and_tags(
                 sni_list = host["sni"] or inbound["sni"]
                 if sni_list:
                     salt = secrets.token_hex(8)
-                    sni = random.choice(sni_list).replace("*", salt)
+                    sni = str(random.choice(sni_list)).replace("*", salt)
 
                 if sids := inbound.get("sids"):
                     inbound["sid"] = random.choice(sids)
@@ -279,13 +279,13 @@ def process_inbounds_and_tags(
                 req_host_list = host["host"] or inbound["host"]
                 if req_host_list:
                     salt = secrets.token_hex(8)
-                    req_host = random.choice(req_host_list).replace("*", salt)
+                    req_host = str(random.choice(req_host_list)).replace("*", salt)
 
                 address = ""
                 address_list = host['address']
                 if host['address']:
                     salt = secrets.token_hex(8)
-                    address = random.choice(address_list).replace('*', salt)
+                    address = str(random.choice(address_list)).replace('*', salt)
 
                 if host["path"] is not None:
                     path = host["path"].format_map(format_variables)
