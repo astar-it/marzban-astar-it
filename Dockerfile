@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260127-v5
+ARG BUILD_VERSION=20260127-v6
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -11,8 +11,29 @@ WORKDIR /code
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential curl unzip gcc python3-dev libpq-dev \
-    && curl -L https://github.com/Gozargah/Marzban-scripts/raw/master/install_latest_xray.sh | bash \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Xray from official XTLS repository
+ARG XRAY_VERSION=latest
+RUN set -ex \
+    && if [ "$XRAY_VERSION" = "latest" ]; then \
+        XRAY_VERSION=$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/'); \
+    fi \
+    && ARCH=$(uname -m) \
+    && case "$ARCH" in \
+        x86_64) XRAY_ARCH="64" ;; \
+        aarch64) XRAY_ARCH="arm64-v8a" ;; \
+        armv7l) XRAY_ARCH="arm32-v7a" ;; \
+        *) echo "Unsupported architecture: $ARCH" && exit 1 ;; \
+    esac \
+    && curl -L -o /tmp/xray.zip "https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-linux-${XRAY_ARCH}.zip" \
+    && unzip /tmp/xray.zip -d /tmp/xray \
+    && mv /tmp/xray/xray /usr/local/bin/xray \
+    && chmod +x /usr/local/bin/xray \
+    && mkdir -p /usr/local/share/xray \
+    && mv /tmp/xray/*.dat /usr/local/share/xray/ \
+    && rm -rf /tmp/xray /tmp/xray.zip \
+    && echo "Xray ${XRAY_VERSION} installed"
 
 COPY ./requirements.txt /code/
 RUN python3 -m pip install --upgrade pip setuptools \
