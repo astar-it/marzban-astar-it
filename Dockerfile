@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260127-v4
+ARG BUILD_VERSION=20260127-v5
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -33,20 +33,8 @@ COPY --from=build /usr/local/bin/xray /usr/local/bin/xray
 
 COPY . /code
 
-# Generate Reality keys and update xray_config.json if placeholder exists
-RUN if grep -q "YOUR_PRIVATE_KEY_HERE" /code/xray_config.json; then \
-        KEYS=$(/usr/local/bin/xray x25519) && \
-        PRIVATE_KEY=$(echo "$KEYS" | awk '/Private key:/ {print $3}') && \
-        PUBLIC_KEY=$(echo "$KEYS" | awk '/Public key:/ {print $3}') && \
-        sed -i "s/YOUR_PRIVATE_KEY_HERE/$PRIVATE_KEY/g" /code/xray_config.json && \
-        sed -i "s/YOUR_PUBLIC_KEY_HERE/$PUBLIC_KEY/g" /code/xray_config.json && \
-        echo "======================================" && \
-        echo "Reality keys generated automatically!" && \
-        echo "Private key: $PRIVATE_KEY" && \
-        echo "Public key: $PUBLIC_KEY" && \
-        echo "======================================" && \
-        echo "$PUBLIC_KEY" > /code/reality_public_key.txt; \
-    fi
+# Reality keys are generated at runtime in entrypoint.sh
+# This allows mounted xray_config.json to be updated with generated keys
 
 # Create marzban-cli symlink (skip completion install as it requires full app initialization)
 RUN ln -s /code/marzban-cli.py /usr/bin/marzban-cli \
@@ -55,14 +43,15 @@ RUN ln -s /code/marzban-cli.py /usr/bin/marzban-cli \
 # Install openssl for certificate generation
 RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 
-# Startup script that generates certs if needed and runs the app
+# Startup script that generates certs and Reality keys if needed
 COPY <<'EOF' /code/entrypoint.sh
 #!/bin/bash
 set -e
 
 CERT_DIR="/var/lib/marzban/certs"
 CERT_FILE="$CERT_DIR/fullchain.pem"
-KEY_FILE="$CERT_DIR/key.pem"
+KEY_FILE="$CERT_DIR/privkey.pem"
+XRAY_CONFIG="/code/xray_config.json"
 
 # Create certs directory if not exists
 mkdir -p "$CERT_DIR"
@@ -80,11 +69,35 @@ if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
     echo "Certificate generated. Replace with real cert for production!"
 fi
 
+# Generate Reality keys if placeholders exist in xray_config.json
+if grep -q "YOUR_PRIVATE_KEY_HERE" "$XRAY_CONFIG"; then
+    echo "========================================"
+    echo "Generating Reality keys..."
+    echo "========================================"
+    KEYS=$(/usr/local/bin/xray x25519)
+    PRIVATE_KEY=$(echo "$KEYS" | grep "Private key:" | awk '{print $3}')
+    PUBLIC_KEY=$(echo "$KEYS" | grep "Public key:" | awk '{print $3}')
+    
+    if [ -n "$PRIVATE_KEY" ] && [ -n "$PUBLIC_KEY" ]; then
+        sed -i "s/YOUR_PRIVATE_KEY_HERE/$PRIVATE_KEY/g" "$XRAY_CONFIG"
+        sed -i "s/YOUR_PUBLIC_KEY_HERE/$PUBLIC_KEY/g" "$XRAY_CONFIG"
+        echo "Reality keys generated!"
+        echo "Private key: $PRIVATE_KEY"
+        echo "Public key: $PUBLIC_KEY"
+        echo ""
+        echo "SAVE THIS PUBLIC KEY for client configuration!"
+        echo "$PUBLIC_KEY" > "$CERT_DIR/reality_public_key.txt"
+    else
+        echo "ERROR: Failed to generate Reality keys!"
+    fi
+    echo "========================================"
+fi
+
 # Show Reality public key if available
-if [ -f "/code/reality_public_key.txt" ]; then
+if [ -f "$CERT_DIR/reality_public_key.txt" ]; then
     echo "========================================"
     echo "Reality Public Key for clients:"
-    cat /code/reality_public_key.txt
+    cat "$CERT_DIR/reality_public_key.txt"
     echo "========================================"
 fi
 
