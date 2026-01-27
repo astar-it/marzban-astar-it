@@ -9,7 +9,8 @@ from cryptography.hazmat.backends import default_backend
 
 from app import app, logger
 from config import (DEBUG, UVICORN_HOST, UVICORN_PORT, UVICORN_SSL_CERTFILE,
-                    UVICORN_SSL_KEYFILE, UVICORN_SSL_CA_TYPE, UVICORN_UDS)
+                    UVICORN_SSL_KEYFILE, UVICORN_SSL_CA_TYPE, UVICORN_UDS,
+                    BEHIND_REVERSE_PROXY)
 
 
 def validate_cert_and_key(cert_file_path, key_file_path, ca_type):
@@ -85,7 +86,11 @@ Use the following command:
 Then, navigate to {click.style(f'http://127.0.0.1:{UVICORN_PORT}', bold=True)} on your computer.
             """)
 
-            bind_args['host'] = '127.0.0.1'
+            # When behind reverse proxy, use UVICORN_HOST; otherwise bind to localhost for security
+            if BEHIND_REVERSE_PROXY:
+                bind_args['host'] = UVICORN_HOST
+            else:
+                bind_args['host'] = '127.0.0.1'
             bind_args['port'] = UVICORN_PORT
 
     if DEBUG:
