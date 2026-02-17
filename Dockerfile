@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260126-v12
+ARG BUILD_VERSION=20260126-v13
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -92,50 +92,57 @@ if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
     echo "Certificate generated. Replace with real cert for production!"
 fi
 
-# Generate Reality keys if placeholders exist in xray_config.json
+# Reality key management: reuse saved keys or generate new ones
+SAVED_PRIVATE_KEY_FILE="$CERT_DIR/reality_private_key.txt"
+SAVED_PUBLIC_KEY_FILE="$CERT_DIR/reality_public_key.txt"
+
 if grep -q "YOUR_PRIVATE_KEY_HERE" "$XRAY_CONFIG"; then
-    echo "========================================"
-    echo "Generating Reality keys..."
-    echo "========================================"
-    KEYS=$(xray x25519 2>&1) || true
-    # Xray 26.2+: "PrivateKey: xxx\nPassword: yyy"
-    PRIVATE_KEY=$(echo "$KEYS" | grep -i "private" | awk -F': ' '{print $2}' | tr -d '[:space:]')
-    PUBLIC_KEY=$(echo "$KEYS" | sed -n '2p' | awk -F': ' '{print $2}' | tr -d '[:space:]')
-    
-    if [ -n "$PRIVATE_KEY" ] && [ -n "$PUBLIC_KEY" ]; then
+    # Check if we have previously saved keys
+    if [ -f "$SAVED_PRIVATE_KEY_FILE" ] && [ -f "$SAVED_PUBLIC_KEY_FILE" ]; then
+        echo "========================================"
+        echo "Restoring saved Reality keys..."
+        PRIVATE_KEY=$(cat "$SAVED_PRIVATE_KEY_FILE")
+        PUBLIC_KEY=$(cat "$SAVED_PUBLIC_KEY_FILE")
         sed -i "s/YOUR_PRIVATE_KEY_HERE/$PRIVATE_KEY/g" "$XRAY_CONFIG"
-        echo "Reality keys generated!"
-        echo "Private key: $PRIVATE_KEY"
+        echo "Reality keys restored from previous run!"
         echo "Public key (for clients): $PUBLIC_KEY"
-        echo ""
-        echo "=========================================="
-        echo "SAVE THIS PUBLIC KEY for client configuration!"
-        echo "=========================================="
-        echo "$PUBLIC_KEY" > "$CERT_DIR/reality_public_key.txt"
+        echo "========================================"
     else
-        echo "ERROR: Failed to generate Reality keys!"
+        echo "========================================"
+        echo "Generating new Reality keys..."
+        echo "========================================"
+        KEYS=$(xray x25519 2>&1) || true
+        PRIVATE_KEY=$(echo "$KEYS" | grep -i "private" | awk -F': ' '{print $2}' | tr -d '[:space:]')
+        PUBLIC_KEY=$(echo "$KEYS" | sed -n '2p' | awk -F': ' '{print $2}' | tr -d '[:space:]')
+
+        if [ -n "$PRIVATE_KEY" ] && [ -n "$PUBLIC_KEY" ]; then
+            sed -i "s/YOUR_PRIVATE_KEY_HERE/$PRIVATE_KEY/g" "$XRAY_CONFIG"
+            echo "$PRIVATE_KEY" > "$SAVED_PRIVATE_KEY_FILE"
+            echo "$PUBLIC_KEY" > "$SAVED_PUBLIC_KEY_FILE"
+            echo "Reality keys generated and saved!"
+            echo "Private key: $PRIVATE_KEY"
+            echo "Public key (for clients): $PUBLIC_KEY"
+            echo ""
+            echo "=========================================="
+            echo "SAVE THIS PUBLIC KEY for client configuration!"
+            echo "=========================================="
+        else
+            echo "ERROR: Failed to generate Reality keys!"
+        fi
+        echo "========================================"
     fi
-    echo "========================================"
 fi
 
-# IMPORTANT: Remove publicKey from server config - it's only for clients
-# Xray 26.2+ rejects unknown fields in realitySettings on server side
-if grep -q '"publicKey"' "$XRAY_CONFIG"; then
-    echo "Removing publicKey from server config (only needed on client side)..."
-    sed -i '/"publicKey"/d' "$XRAY_CONFIG"
-fi
+# Remove publicKey from server config (only needed on client side)
+sed -i '/"publicKey"/d' "$XRAY_CONFIG" 2>/dev/null || true
 
 # Show Reality public key if available
-if [ -f "$CERT_DIR/reality_public_key.txt" ]; then
+if [ -f "$SAVED_PUBLIC_KEY_FILE" ]; then
     echo "========================================"
     echo "Reality Public Key for clients:"
-    cat "$CERT_DIR/reality_public_key.txt"
+    cat "$SAVED_PUBLIC_KEY_FILE"
     echo "========================================"
 fi
-
-# Validate xray config before starting
-echo "Validating Xray config..."
-xray run -test -config "$XRAY_CONFIG" 2>&1 || echo "WARNING: Xray config validation failed (may work with Marzban-injected clients)"
 
 # Ensure setuptools with pkg_resources is available (needed by apscheduler)
 pip install --no-cache-dir 'setuptools==70.3.0' 2>/dev/null || true

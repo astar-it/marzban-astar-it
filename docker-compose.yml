@@ -10,4 +10,5 @@ services:
     volumes:
       - /var/lib/marzban:/var/lib/marzban
       - /var/lib/marzban/certs:/var/lib/marzban/certs
-      - ./xray_config.json:/code/xray_config.json
+      # xray_config.json is baked into the Docker image
+      # Keys are auto-generated and persisted in /var/lib/marzban/certs/
