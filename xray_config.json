@@ -37,11 +37,7 @@
           "xver": 0,
           "serverNames": [
             "www.google.com",
-            "google.com",
-            "www.microsoft.com",
-            "microsoft.com",
-            "www.cloudflare.com",
-            "cloudflare.com"
+            "google.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
           "shortIds": ["", "0123456789abcdef"]
@@ -73,9 +69,7 @@
           "xver": 0,
           "serverNames": [
             "www.google.com",
-            "google.com",
-            "www.microsoft.com",
-            "www.cloudflare.com"
+            "google.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
           "shortIds": ["", "0123456789abcdef"]

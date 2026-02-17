@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260126-v13
+ARG BUILD_VERSION=20260126-v14
 
 FROM python:$PYTHON_VERSION-slim AS build
 
