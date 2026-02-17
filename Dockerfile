@@ -1,11 +1,10 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260217-v3
+ARG BUILD_VERSION=20260217-v4
 
 FROM python:$PYTHON_VERSION-slim AS build
 
 ENV PYTHONUNBUFFERED=1
-ENV BUILD_VERSION=$BUILD_VERSION
 
 WORKDIR /code
 
@@ -36,12 +35,14 @@ RUN set -ex \
     && echo "Xray ${XRAY_VERSION} installed"
 
 COPY ./requirements.txt /code/
-RUN python3 -m pip install --upgrade pip setuptools \
+RUN pip install --no-cache-dir --upgrade pip setuptools \
     && pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+# Save the actual site-packages path for the next stage
+RUN python -c "import site; print(site.getsitepackages()[0])" > /tmp/site_packages_path
 
 FROM python:$PYTHON_VERSION-slim
 
-ENV PYTHON_LIB_PATH=/usr/local/lib/python${PYTHON_VERSION%.*}/site-packages
 WORKDIR /code
 
 # Install runtime dependencies (libpq for PostgreSQL, openssl for certs)
@@ -49,7 +50,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libpq5 openssl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=build $PYTHON_LIB_PATH $PYTHON_LIB_PATH
+# Copy Python packages using the correct path
+COPY --from=build /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=build /usr/local/bin /usr/local/bin
 COPY --from=build /usr/local/share/xray /usr/local/share/xray
 COPY --from=build /usr/local/bin/xray /usr/local/bin/xray
@@ -92,14 +94,9 @@ if grep -q "YOUR_PRIVATE_KEY_HERE" "$XRAY_CONFIG"; then
     echo "Generating Reality keys..."
     echo "========================================"
     KEYS=$(xray x25519 2>&1) || true
-    echo "Raw x25519 output: $KEYS"
-    # Xray 26.2+ uses "PrivateKey:" format, older versions use "Private key:"
+    # Xray 26.2+: "PrivateKey: xxx\nPassword: yyy"
     PRIVATE_KEY=$(echo "$KEYS" | grep -i "private" | awk -F': ' '{print $2}' | tr -d '[:space:]')
-    # Xray 26.2+ uses "Password:" instead of "Public key:" for the public part
-    # We need the second line which is the public key equivalent
     PUBLIC_KEY=$(echo "$KEYS" | sed -n '2p' | awk -F': ' '{print $2}' | tr -d '[:space:]')
-    echo "Parsed private: ${PRIVATE_KEY:-EMPTY}"
-    echo "Parsed public: ${PUBLIC_KEY:-EMPTY}"
     
     if [ -n "$PRIVATE_KEY" ] && [ -n "$PUBLIC_KEY" ]; then
         sed -i "s/YOUR_PRIVATE_KEY_HERE/$PRIVATE_KEY/g" "$XRAY_CONFIG"
@@ -107,7 +104,6 @@ if grep -q "YOUR_PRIVATE_KEY_HERE" "$XRAY_CONFIG"; then
         echo "Reality keys generated!"
         echo "Private key: $PRIVATE_KEY"
         echo "Public key: $PUBLIC_KEY"
-        echo ""
         echo "SAVE THIS PUBLIC KEY for client configuration!"
         echo "$PUBLIC_KEY" > "$CERT_DIR/reality_public_key.txt"
     else
