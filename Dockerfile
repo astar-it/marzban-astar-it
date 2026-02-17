@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260217-v6
+ARG BUILD_VERSION=20260217-v7
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -100,11 +100,13 @@ if grep -q "YOUR_PRIVATE_KEY_HERE" "$XRAY_CONFIG"; then
     
     if [ -n "$PRIVATE_KEY" ] && [ -n "$PUBLIC_KEY" ]; then
         sed -i "s/YOUR_PRIVATE_KEY_HERE/$PRIVATE_KEY/g" "$XRAY_CONFIG"
-        sed -i "s/YOUR_PUBLIC_KEY_HERE/$PUBLIC_KEY/g" "$XRAY_CONFIG"
         echo "Reality keys generated!"
         echo "Private key: $PRIVATE_KEY"
-        echo "Public key: $PUBLIC_KEY"
+        echo "Public key (for clients): $PUBLIC_KEY"
+        echo ""
+        echo "=========================================="
         echo "SAVE THIS PUBLIC KEY for client configuration!"
+        echo "=========================================="
         echo "$PUBLIC_KEY" > "$CERT_DIR/reality_public_key.txt"
     else
         echo "ERROR: Failed to generate Reality keys!"
