@@ -132,10 +132,25 @@ class XRayCore:
             stdout=subprocess.PIPE,
             universal_newlines=True
         )
-        self.process.stdin.write(config.to_json())
+        config_json = config.to_json()
+        self.process.stdin.write(config_json)
         self.process.stdin.flush()
         self.process.stdin.close()
         logger.warning(f"Xray core {self.version} started")
+
+        # Check if Xray crashed immediately (wait 1s)
+        time.sleep(1)
+        if self.process.poll() is not None:
+            exit_code = self.process.poll()
+            remaining = self.process.stdout.read()
+            logger.error(f"Xray core CRASHED immediately with exit code {exit_code}")
+            if remaining:
+                for line in remaining.strip().split('\n')[-30:]:
+                    logger.error(f"  [xray] {line}")
+            else:
+                logger.error("  [xray] No output captured")
+            self.process = None
+            return
 
         self.__capture_process_logs()
 

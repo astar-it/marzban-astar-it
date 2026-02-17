@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260217-v7
+ARG BUILD_VERSION=20260126-v10
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -55,6 +55,10 @@ COPY --from=build /usr/local/lib/python3.12/site-packages /usr/local/lib/python3
 COPY --from=build /usr/local/bin /usr/local/bin
 COPY --from=build /usr/local/share/xray /usr/local/share/xray
 COPY --from=build /usr/local/bin/xray /usr/local/bin/xray
+
+# Force cache invalidation for code changes
+ARG BUILD_VERSION
+RUN echo "Build: ${BUILD_VERSION}"
 
 COPY . /code
 
