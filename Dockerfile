@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260217-v5
+ARG BUILD_VERSION=20260217-v6
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -120,8 +120,8 @@ if [ -f "$CERT_DIR/reality_public_key.txt" ]; then
     echo "========================================"
 fi
 
-# Ensure setuptools is available (pkg_resources needed by apscheduler)
-pip install --no-cache-dir setuptools 2>/dev/null || true
+# Ensure setuptools with pkg_resources is available (needed by apscheduler)
+pip install --no-cache-dir 'setuptools==70.3.0' 2>/dev/null || true
 
 # Run migrations and start app
 alembic upgrade head
