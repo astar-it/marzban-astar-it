@@ -29,6 +29,13 @@ def core_health_check():
             # Don't attempt restart after too many failures
             return
         
+        # Log last Xray output to help diagnose crash
+        if xray.core._logs_buffer:
+            last_logs = list(xray.core._logs_buffer)[-10:]
+            logger.error(f"Xray core crashed. Last {len(last_logs)} log lines:")
+            for line in last_logs:
+                logger.error(f"  [xray] {line}")
+        
         logger.warning(f"Xray core not running (attempt {_consecutive_failures}/{_MAX_CONSECUTIVE_FAILURES})")
         if not config:
             config = xray.config.include_db_users()
@@ -66,6 +73,15 @@ def start_core():
     logger.info("Starting main Xray core")
     try:
         xray.core.start(config)
+        # Wait briefly and check if core is still running
+        time.sleep(1)
+        if not xray.core.started:
+            logger.error("Xray core exited immediately after start!")
+            if xray.core._logs_buffer:
+                last_logs = list(xray.core._logs_buffer)[-20:]
+                logger.error(f"Xray core output ({len(last_logs)} lines):")
+                for line in last_logs:
+                    logger.error(f"  [xray] {line}")
     except Exception:
         traceback.print_exc()
 
