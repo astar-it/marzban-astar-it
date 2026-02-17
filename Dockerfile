@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260126-v10
+ARG BUILD_VERSION=20260126-v11
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -118,6 +118,13 @@ if grep -q "YOUR_PRIVATE_KEY_HERE" "$XRAY_CONFIG"; then
     echo "========================================"
 fi
 
+# IMPORTANT: Remove publicKey from server config - it's only for clients
+# Xray 26.2+ rejects unknown fields in realitySettings on server side
+if grep -q '"publicKey"' "$XRAY_CONFIG"; then
+    echo "Removing publicKey from server config (only needed on client side)..."
+    sed -i '/"publicKey"/d' "$XRAY_CONFIG"
+fi
+
 # Show Reality public key if available
 if [ -f "$CERT_DIR/reality_public_key.txt" ]; then
     echo "========================================"
@@ -125,6 +132,10 @@ if [ -f "$CERT_DIR/reality_public_key.txt" ]; then
     cat "$CERT_DIR/reality_public_key.txt"
     echo "========================================"
 fi
+
+# Validate xray config before starting
+echo "Validating Xray config..."
+xray run -test -config "$XRAY_CONFIG" 2>&1 || echo "WARNING: Xray config validation failed (may work with Marzban-injected clients)"
 
 # Ensure setuptools with pkg_resources is available (needed by apscheduler)
 pip install --no-cache-dir 'setuptools==70.3.0' 2>/dev/null || true
