@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260217-v1
+ARG BUILD_VERSION=20260217-v2
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -49,13 +49,13 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libpq5 openssl \
     && rm -rf /var/lib/apt/lists/*
 
-# Ensure setuptools is available (needed by apscheduler for pkg_resources)
-RUN pip install --no-cache-dir setuptools
-
 COPY --from=build $PYTHON_LIB_PATH $PYTHON_LIB_PATH
 COPY --from=build /usr/local/bin /usr/local/bin
 COPY --from=build /usr/local/share/xray /usr/local/share/xray
 COPY --from=build /usr/local/bin/xray /usr/local/bin/xray
+
+# Install setuptools AFTER copy (needed by apscheduler for pkg_resources)
+RUN pip install --no-cache-dir setuptools
 
 COPY . /code
 
@@ -94,12 +94,13 @@ if grep -q "YOUR_PRIVATE_KEY_HERE" "$XRAY_CONFIG"; then
     echo "========================================"
     echo "Generating Reality keys..."
     echo "========================================"
-    echo "Xray binary: $(which xray || echo 'NOT FOUND')"
-    echo "Xray version: $(xray version 2>&1 | head -1 || echo 'FAILED')"
     KEYS=$(xray x25519 2>&1) || true
-    echo "Raw output: $KEYS"
-    PRIVATE_KEY=$(echo "$KEYS" | grep "Private key:" | awk '{print $3}')
-    PUBLIC_KEY=$(echo "$KEYS" | grep "Public key:" | awk '{print $3}')
+    echo "Raw x25519 output: $KEYS"
+    # Xray 26.2+ uses "PrivateKey:" format, older versions use "Private key:"
+    PRIVATE_KEY=$(echo "$KEYS" | grep -i "private" | awk -F': ' '{print $2}' | tr -d '[:space:]')
+    # Xray 26.2+ uses "Password:" instead of "Public key:" for the public part
+    # We need the second line which is the public key equivalent
+    PUBLIC_KEY=$(echo "$KEYS" | sed -n '2p' | awk -F': ' '{print $2}' | tr -d '[:space:]')
     echo "Parsed private: ${PRIVATE_KEY:-EMPTY}"
     echo "Parsed public: ${PUBLIC_KEY:-EMPTY}"
     
