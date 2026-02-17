@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260217-v2
+ARG BUILD_VERSION=20260217-v3
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -53,9 +53,6 @@ COPY --from=build $PYTHON_LIB_PATH $PYTHON_LIB_PATH
 COPY --from=build /usr/local/bin /usr/local/bin
 COPY --from=build /usr/local/share/xray /usr/local/share/xray
 COPY --from=build /usr/local/bin/xray /usr/local/bin/xray
-
-# Install setuptools AFTER copy (needed by apscheduler for pkg_resources)
-RUN pip install --no-cache-dir setuptools
 
 COPY . /code
 

@@ -1,3 +1,4 @@
+setuptools>=75.0.0
 APScheduler==3.9.1.post1
 psycopg2-binary==2.9.9
 Deprecated==1.2.13
