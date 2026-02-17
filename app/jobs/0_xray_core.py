@@ -7,15 +7,35 @@ from app.models.node import NodeStatus
 from config import JOB_CORE_HEALTH_CHECK_INTERVAL
 from xray_api import exc as xray_exc
 
+# Track health check state
+_consecutive_failures = 0
+_MAX_CONSECUTIVE_FAILURES = 5
+
 
 def core_health_check():
+    global _consecutive_failures
     config = None
 
     # main core
     if not xray.core.started:
+        _consecutive_failures += 1
+        
+        if _consecutive_failures > _MAX_CONSECUTIVE_FAILURES:
+            if _consecutive_failures == _MAX_CONSECUTIVE_FAILURES + 1:
+                logger.error(
+                    f"Xray core failed to start {_consecutive_failures} times consecutively. "
+                    "Stopping restart attempts. Check your xray_config.json for errors."
+                )
+            # Don't attempt restart after too many failures
+            return
+        
+        logger.warning(f"Xray core not running (attempt {_consecutive_failures}/{_MAX_CONSECUTIVE_FAILURES})")
         if not config:
             config = xray.config.include_db_users()
         xray.core.restart(config)
+    else:
+        # Reset counter on successful health check
+        _consecutive_failures = 0
 
     # nodes' core
     for node_id, node in list(xray.nodes.items()):
