@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260126-v15
+ARG BUILD_VERSION=20260126-v16
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -98,9 +98,9 @@ FROM python:$PYTHON_VERSION-slim
 
 WORKDIR /code
 
-# Install runtime dependencies (libpq for PostgreSQL, openssl for certs)
+# Install runtime dependencies (libpq for PostgreSQL, openssl for certs, certbot for Let's Encrypt)
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libpq5 openssl \
+    && apt-get install -y --no-install-recommends libpq5 openssl certbot cron \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python packages using the correct path
@@ -129,28 +129,112 @@ CERT_FILE="$CERT_DIR/fullchain.pem"
 KEY_FILE="$CERT_DIR/privkey.pem"
 XRAY_CONFIG="/code/xray_config.json"
 
-# Create certs directory if not exists
 mkdir -p "$CERT_DIR"
 
-# Generate self-signed certificate if not exists
-if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+# ──────────────────────────────────────────────────
+# TLS Certificate management
+# Priority: Let's Encrypt (if SSL_CERT_DOMAIN set) > existing certs > self-signed
+# ──────────────────────────────────────────────────
+
+cert_is_valid() {
+    [ -f "$CERT_FILE" ] && [ -f "$KEY_FILE" ] && \
+    openssl x509 -in "$CERT_FILE" -noout -checkend 86400 2>/dev/null
+}
+
+try_certbot() {
+    local domain="$1"
+    local email="$2"
+    local le_live="/etc/letsencrypt/live/$domain"
+
+    if [ -z "$domain" ]; then
+        return 1
+    fi
+
+    local email_arg="--register-unsafely-without-email"
+    if [ -n "$email" ]; then
+        email_arg="--email $email"
+    fi
+
+    echo "========================================"
+    echo "Obtaining Let's Encrypt certificate for $domain ..."
+    echo "========================================"
+
+    certbot certonly \
+        --standalone \
+        --preferred-challenges http \
+        --http-01-port "${SSL_HTTP_PORT:-80}" \
+        --non-interactive \
+        --agree-tos \
+        $email_arg \
+        -d "$domain" \
+        --cert-name "$domain" \
+        --keep-until-expiring \
+        --deploy-hook "cp '$le_live/fullchain.pem' '$CERT_FILE' && cp '$le_live/privkey.pem' '$KEY_FILE'" \
+        2>&1 && LE_OK=1 || LE_OK=0
+
+    if [ "$LE_OK" = "1" ] && [ -f "$le_live/fullchain.pem" ]; then
+        cp "$le_live/fullchain.pem" "$CERT_FILE"
+        cp "$le_live/privkey.pem" "$KEY_FILE"
+        echo "Let's Encrypt certificate installed!"
+        # Set up daily cron renewal
+        echo "0 3 * * * certbot renew --quiet --http-01-port ${SSL_HTTP_PORT:-80} --deploy-hook \"cp '$le_live/fullchain.pem' '$CERT_FILE' && cp '$le_live/privkey.pem' '$KEY_FILE'\"" \
+            > /etc/cron.d/certbot-renew
+        chmod 0644 /etc/cron.d/certbot-renew
+        cron
+        echo "Auto-renewal cron job installed (daily at 3:00 AM)"
+        return 0
+    else
+        echo "WARNING: certbot failed. Check that port ${SSL_HTTP_PORT:-80} is reachable and $domain points to this server."
+        return 1
+    fi
+}
+
+generate_self_signed() {
     echo "========================================"
     echo "Generating self-signed TLS certificate..."
     echo "========================================"
-    openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes \
+    local san="DNS:localhost,IP:127.0.0.1"
+    if [ -n "$SSL_CERT_DOMAIN" ]; then
+        san="DNS:$SSL_CERT_DOMAIN,$san"
+    fi
+    openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
+        -sha256 -days 3650 -nodes \
         -keyout "$KEY_FILE" \
         -out "$CERT_FILE" \
-        -subj "/CN=marzban" \
-        -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
-    echo "Certificate generated. Replace with real cert for production!"
+        -subj "/CN=${SSL_CERT_DOMAIN:-marzban}" \
+        -addext "subjectAltName=$san"
+    echo "Self-signed certificate generated. Set SSL_CERT_DOMAIN for real Let's Encrypt cert."
+}
+
+# Decide cert strategy
+if [ -n "$SSL_CERT_DOMAIN" ]; then
+    if cert_is_valid; then
+        ISSUER=$(openssl x509 -in "$CERT_FILE" -noout -issuer 2>/dev/null || true)
+        if echo "$ISSUER" | grep -qi "Let's Encrypt\|R3\|R10\|R11\|E5\|E6"; then
+            echo "Valid Let's Encrypt cert found, attempting renewal check..."
+            try_certbot "$SSL_CERT_DOMAIN" "${SSL_CERT_EMAIL:-}" || true
+        else
+            echo "Existing cert found but not from Let's Encrypt. Trying certbot..."
+            try_certbot "$SSL_CERT_DOMAIN" "${SSL_CERT_EMAIL:-}" || echo "Keeping existing certificate."
+        fi
+    else
+        try_certbot "$SSL_CERT_DOMAIN" "${SSL_CERT_EMAIL:-}" || generate_self_signed
+    fi
+else
+    if ! cert_is_valid; then
+        generate_self_signed
+    else
+        echo "Existing valid certificate found."
+    fi
 fi
 
-# Reality key management: reuse saved keys or generate new ones
+# ──────────────────────────────────────────────────
+# Reality key management
+# ──────────────────────────────────────────────────
 SAVED_PRIVATE_KEY_FILE="$CERT_DIR/reality_private_key.txt"
 SAVED_PUBLIC_KEY_FILE="$CERT_DIR/reality_public_key.txt"
 
 if grep -q "YOUR_PRIVATE_KEY_HERE" "$XRAY_CONFIG"; then
-    # Check if we have previously saved keys
     if [ -f "$SAVED_PRIVATE_KEY_FILE" ] && [ -f "$SAVED_PUBLIC_KEY_FILE" ]; then
         echo "========================================"
         echo "Restoring saved Reality keys..."
@@ -186,10 +270,8 @@ if grep -q "YOUR_PRIVATE_KEY_HERE" "$XRAY_CONFIG"; then
     fi
 fi
 
-# Remove publicKey from server config (only needed on client side)
 sed -i '/"publicKey"/d' "$XRAY_CONFIG" 2>/dev/null || true
 
-# Show Reality public key if available
 if [ -f "$SAVED_PUBLIC_KEY_FILE" ]; then
     echo "========================================"
     echo "Reality Public Key for clients:"
@@ -197,18 +279,16 @@ if [ -f "$SAVED_PUBLIC_KEY_FILE" ]; then
     echo "========================================"
 fi
 
-# Ensure setuptools with pkg_resources is available (needed by apscheduler)
+# ──────────────────────────────────────────────────
+# Finalize and start
+# ──────────────────────────────────────────────────
 pip install --no-cache-dir 'setuptools==70.3.0' 2>/dev/null || true
 
-# Generate Hysteria2 config if enabled
 if [ "${HYSTERIA2_ENABLED:-true}" = "true" ] && command -v hysteria >/dev/null 2>&1; then
-    echo "========================================"
     echo "Generating Hysteria2 config..."
-    echo "========================================"
     python /code/scripts/generate_hysteria2_config.py 2>&1 || echo "WARNING: Failed to generate Hysteria2 config"
 fi
 
-# Run migrations and start app
 alembic upgrade head
 exec python main.py
 EOF
