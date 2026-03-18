@@ -165,6 +165,22 @@ class V2rayShareLink(str):
                 obfs_password=inbound.get("obfs_password", ""),
                 sni=inbound.get("sni", ""),
             )
+        elif inbound["protocol"] == "tuic":
+            link = self.tuic(
+                remark=remark,
+                address=address,
+                port=inbound["port"],
+                uuid=settings.get("uuid", ""),
+                password=settings["password"],
+            )
+        elif inbound["protocol"] == "juicity":
+            link = self.juicity(
+                remark=remark,
+                address=address,
+                port=inbound["port"],
+                uuid=settings.get("uuid", ""),
+                password=settings["password"],
+            )
         else:
             return
 
@@ -506,6 +522,32 @@ class V2rayShareLink(str):
         if obfs_password:
             params["obfs"] = "salamander"
             params["obfs-password"] = obfs_password
+        return url + "?" + urlparse.urlencode(params) + f"#{urlparse.quote(remark)}"
+
+    @classmethod
+    def tuic(
+        cls,
+        remark: str,
+        address: str,
+        port: int,
+        uuid: str,
+        password: str,
+    ):
+        url = f"tuic://{urlparse.quote(str(uuid), safe='')}:{urlparse.quote(password, safe=':')}@{address}:{port}"
+        params = {"congestion_control": "bbr", "udp_relay_mode": "native"}
+        return url + "?" + urlparse.urlencode(params) + f"#{urlparse.quote(remark)}"
+
+    @classmethod
+    def juicity(
+        cls,
+        remark: str,
+        address: str,
+        port: int,
+        uuid: str,
+        password: str,
+    ):
+        url = f"juicity://{urlparse.quote(str(uuid), safe='')}:{urlparse.quote(password, safe=':')}@{address}:{port}"
+        params = {"congestion_control": "bbr", "allow_insecure": "1"}
         return url + "?" + urlparse.urlencode(params) + f"#{urlparse.quote(remark)}"
 
 

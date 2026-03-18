@@ -1,3 +1,4 @@
+import os
 import time
 import traceback
 
@@ -10,6 +11,10 @@ from xray_api import exc as xray_exc
 # Track health check state
 _consecutive_failures = 0
 _MAX_CONSECUTIVE_FAILURES = 5
+
+# TUIC/Juicity cores (set at startup)
+_tuic_core = None
+_juicity_core = None
 
 
 def core_health_check():
@@ -106,6 +111,58 @@ def start_core():
             logger.warning("Failed to start Hysteria2 core")
             traceback.print_exc()
 
+    # TUIC core
+    from config import TUIC_ENABLED
+    if TUIC_ENABLED:
+        try:
+            from app.tuic.core import TUICCore
+            from app.tuic.config import write_tuic_config
+            from config import TUIC_EXECUTABLE_PATH
+            import os
+
+            tuic_config_path = "/var/lib/marzban/tuic.json"
+            cert_path = "/var/lib/marzban/certs/fullchain.pem"
+            key_path = "/var/lib/marzban/certs/privkey.pem"
+            if os.path.isfile(cert_path) and os.path.isfile(key_path):
+                write_tuic_config(tuic_config_path, cert_path, key_path)
+            if os.path.isfile(tuic_config_path) and os.path.isfile(TUIC_EXECUTABLE_PATH):
+                global _tuic_core
+                _tuic_core = TUICCore(TUIC_EXECUTABLE_PATH)
+                version = _tuic_core.get_version()
+                logger.info(f"Starting TUIC core ({version})")
+                _tuic_core.start(tuic_config_path)
+            else:
+                logger.warning("TUIC enabled but binary or config not found, skipping")
+        except Exception:
+            logger.warning("Failed to start TUIC core")
+            traceback.print_exc()
+
+    # Juicity core
+    from config import JUICITY_ENABLED
+    if JUICITY_ENABLED:
+        try:
+            from app.juicity.core import JuicityCore
+            from app.juicity.config import write_juicity_config
+            from config import JUICITY_EXECUTABLE_PATH
+            import os
+
+            juicity_config_path = "/var/lib/marzban/juicity.json"
+            cert_path = "/var/lib/marzban/certs/fullchain.pem"
+            key_path = "/var/lib/marzban/certs/privkey.pem"
+            if os.path.isfile(cert_path) and os.path.isfile(key_path):
+                write_juicity_config(juicity_config_path, cert_path, key_path)
+            if os.path.isfile(juicity_config_path) and os.path.isfile(JUICITY_EXECUTABLE_PATH):
+                global _juicity_core
+                _juicity_core = JuicityCore(JUICITY_EXECUTABLE_PATH)
+                version = _juicity_core.get_version()
+                logger.info(f"Starting Juicity core ({version})")
+                _juicity_core.start(juicity_config_path)
+            else:
+                logger.warning("Juicity enabled but binary or config not found, skipping")
+        except Exception:
+            logger.warning("Failed to start Juicity core")
+            traceback.print_exc()
+
     # nodes' core
     logger.info("Starting nodes Xray core")
     with GetDB() as db:
@@ -121,6 +178,32 @@ def start_core():
                       seconds=JOB_CORE_HEALTH_CHECK_INTERVAL,
                       coalesce=True, max_instances=1)
 
+    # TUIC/Juicity config sync - regenerate when users change
+    def sync_tuic_juicity():
+        global _tuic_core, _juicity_core
+        cert_path = "/var/lib/marzban/certs/fullchain.pem"
+        key_path = "/var/lib/marzban/certs/privkey.pem"
+        if not os.path.isfile(cert_path) or not os.path.isfile(key_path):
+            return
+        if TUIC_ENABLED:
+            try:
+                from app.tuic.config import write_tuic_config
+                write_tuic_config("/var/lib/marzban/tuic.json", cert_path, key_path)
+                if _tuic_core and _tuic_core.started:
+                    _tuic_core.restart()
+            except Exception as e:
+                logger.debug(f"TUIC sync: {e}")
+        if JUICITY_ENABLED:
+            try:
+                from app.juicity.config import write_juicity_config
+                write_juicity_config("/var/lib/marzban/juicity.json", cert_path, key_path)
+                if _juicity_core and _juicity_core.started:
+                    _juicity_core.restart()
+            except Exception as e:
+                logger.debug(f"Juicity sync: {e}")
+
+    scheduler.add_job(sync_tuic_juicity, 'interval', seconds=60, coalesce=True, max_instances=1)
+
 
 @app.on_event("shutdown")
 def app_shutdown():
@@ -130,6 +213,20 @@ def app_shutdown():
     if '_hysteria2_core' in globals() and _hysteria2_core:
         logger.info("Stopping Hysteria2 core")
         _hysteria2_core.stop()
+
+    try:
+        if _tuic_core and _tuic_core.started:
+            logger.info("Stopping TUIC core")
+            _tuic_core.stop()
+    except NameError:
+        pass
+
+    try:
+        if _juicity_core and _juicity_core.started:
+            logger.info("Stopping Juicity core")
+            _juicity_core.stop()
+    except NameError:
+        pass
 
     logger.info("Stopping nodes Xray core")
     for node in list(xray.nodes.values()):

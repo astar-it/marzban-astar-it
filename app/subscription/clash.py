@@ -254,8 +254,8 @@ class ClashConfiguration(object):
         return node
 
     def add(self, remark: str, address: str, inbound: dict, settings: dict):
-        # hysteria2 not supported by regular clash
-        if inbound['protocol'] == 'hysteria2':
+        # hysteria2, tuic, juicity not supported by regular clash
+        if inbound['protocol'] in ('hysteria2', 'tuic', 'juicity'):
             return
         # not supported by clash
         if inbound['network'] in ("kcp", "splithttp", "xhttp"):
@@ -350,6 +350,10 @@ class ClashMetaConfiguration(ClashConfiguration):
     def add(self, remark: str, address: str, inbound: dict, settings: dict):
         if inbound['protocol'] == 'hysteria2':
             return self._add_hysteria2(remark, address, inbound, settings)
+        if inbound['protocol'] == 'tuic':
+            return self._add_tuic(remark, address, inbound, settings)
+        if inbound['protocol'] == 'juicity':
+            return self._add_juicity(remark, address, inbound, settings)
 
         # not supported by clash-meta
         if inbound['network'] in ("kcp", "splithttp", "xhttp") or (inbound['network'] == "quic" and inbound["header_type"] != "none"):
@@ -420,5 +424,36 @@ class ClashMetaConfiguration(ClashConfiguration):
         sni = inbound.get('sni', '')
         if sni:
             node['sni'] = sni
+        self.data['proxies'].append(node)
+        self.proxy_remarks.append(proxy_remark)
+
+    def _add_tuic(self, remark: str, address: str, inbound: dict, settings: dict):
+        proxy_remark = self._remark_validation(remark)
+        node = {
+            'name': proxy_remark,
+            'type': 'tuic',
+            'server': address,
+            'port': inbound['port'],
+            'uuid': str(settings.get('uuid', '')),
+            'password': settings['password'],
+            'skip-cert-verify': True,
+            'congestion-control': 'bbr',
+            'udp-relay-mode': 'native',
+        }
+        self.data['proxies'].append(node)
+        self.proxy_remarks.append(proxy_remark)
+
+    def _add_juicity(self, remark: str, address: str, inbound: dict, settings: dict):
+        proxy_remark = self._remark_validation(remark)
+        node = {
+            'name': proxy_remark,
+            'type': 'juicity',
+            'server': address,
+            'port': inbound['port'],
+            'uuid': str(settings.get('uuid', '')),
+            'password': settings['password'],
+            'skip-cert-verify': True,
+            'congestion-control': 'bbr',
+        }
         self.data['proxies'].append(node)
         self.proxy_remarks.append(proxy_remark)

@@ -38,7 +38,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resetStrategy } from "constants/UserSettings";
-import { FilterUsageType, useDashboard } from "contexts/DashboardContext";
+import {
+  FilterUsageType,
+  ProtocolType,
+  useDashboard,
+} from "contexts/DashboardContext";
 import dayjs from "dayjs";
 import { FC, useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
@@ -101,6 +105,31 @@ const formatUser = (user: User): FormType => {
     selected_proxies: Object.keys(user.proxies) as ProxyKeys,
   };
 };
+const PROTOCOL_DESCRIPTIONS: Record<
+  ProtocolType,
+  { title: ProtocolType; descriptionKey: string }
+> = {
+  vmess: { title: "vmess", descriptionKey: "userDialog.vmessDesc" },
+  vless: { title: "vless", descriptionKey: "userDialog.vlessDesc" },
+  trojan: { title: "trojan", descriptionKey: "userDialog.trojanDesc" },
+  shadowsocks: {
+    title: "shadowsocks",
+    descriptionKey: "userDialog.shadowsocksDesc",
+  },
+  hysteria2: {
+    title: "hysteria2",
+    descriptionKey: "userDialog.hysteria2Desc",
+  },
+  tuic: {
+    title: "tuic",
+    descriptionKey: "userDialog.tuicDesc",
+  },
+  juicity: {
+    title: "juicity",
+    descriptionKey: "userDialog.juicityDesc",
+  },
+};
+
 const getDefaultValues = (): FormType => {
   const defaultInbounds = Object.fromEntries(useDashboard.getState().inbounds);
   const inbounds: UserInbounds = {};
@@ -123,6 +152,9 @@ const getDefaultValues = (): FormType => {
       vmess: { id: "" },
       trojan: { password: "" },
       shadowsocks: { password: "", method: "chacha20-ietf-poly1305" },
+      hysteria2: { password: "" },
+      tuic: { uuid: "", password: "" },
+      juicity: { uuid: "", password: "" },
     },
   };
 };
@@ -172,6 +204,11 @@ const baseSchema = {
       deleteIfEmpty(ins.trojan, "password");
       deleteIfEmpty(ins.shadowsocks, "password");
       deleteIfEmpty(ins.shadowsocks, "method");
+      deleteIfEmpty(ins.hysteria2, "password");
+      deleteIfEmpty(ins.tuic, "uuid");
+      deleteIfEmpty(ins.tuic, "password");
+      deleteIfEmpty(ins.juicity, "uuid");
+      deleteIfEmpty(ins.juicity, "password");
       return ins;
     }),
   data_limit: z
@@ -761,30 +798,17 @@ export const UserDialog: FC<UserDialogProps> = () => {
                       control={form.control}
                       name="selected_proxies"
                       render={({ field }) => {
+                        const protocolList = (
+                          Object.keys(PROTOCOL_DESCRIPTIONS) as ProtocolType[]
+                        ).map((p) => ({
+                          title: PROTOCOL_DESCRIPTIONS[p].title,
+                          description: t(
+                            PROTOCOL_DESCRIPTIONS[p].descriptionKey
+                          ),
+                        }));
                         return (
                           <RadioGroup
-                            list={[
-                              {
-                                title: "vmess",
-                                description: t("userDialog.vmessDesc"),
-                              },
-                              {
-                                title: "vless",
-                                description: t("userDialog.vlessDesc"),
-                              },
-                              {
-                                title: "trojan",
-                                description: t("userDialog.trojanDesc"),
-                              },
-                              {
-                                title: "shadowsocks",
-                                description: t("userDialog.shadowsocksDesc"),
-                              },
-                              {
-                                title: "hysteria2",
-                                description: t("userDialog.hysteria2Desc"),
-                              },
-                            ]}
+                            list={protocolList}
                             disabled={disabled}
                             {...field}
                           />

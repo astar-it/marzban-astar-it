@@ -51,6 +51,42 @@ RUN set -ex \
     && chmod +x /usr/local/bin/hysteria \
     && echo "Hysteria2 ${HYSTERIA_VERSION} installed"
 
+# Install TUIC server
+ARG TUIC_VERSION=latest
+RUN set -ex \
+    && if [ "$TUIC_VERSION" = "latest" ]; then \
+        TUIC_VERSION=$(curl -s https://api.github.com/repos/Itsusinn/tuic/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/'); \
+    fi \
+    && ARCH=$(uname -m) \
+    && case "$ARCH" in \
+        x86_64) TUIC_ARCH="x86_64" ;; \
+        aarch64) TUIC_ARCH="aarch64" ;; \
+        armv7l) TUIC_ARCH="armv7" ;; \
+        *) echo "Unsupported architecture: $ARCH" && exit 1 ;; \
+    esac \
+    && curl -L -o /usr/local/bin/tuic-server "https://github.com/Itsusinn/tuic/releases/download/${TUIC_VERSION}/tuic-server-${TUIC_ARCH}-linux" \
+    && chmod +x /usr/local/bin/tuic-server \
+    && echo "TUIC ${TUIC_VERSION} installed"
+
+# Install Juicity server
+ARG JUICITY_VERSION=latest
+RUN set -ex \
+    && if [ "$JUICITY_VERSION" = "latest" ]; then \
+        JUICITY_VERSION=$(curl -s https://api.github.com/repos/juicity/juicity/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/'); \
+    fi \
+    && ARCH=$(uname -m) \
+    && case "$ARCH" in \
+        x86_64) JUICITY_ARCH="x86_64" ;; \
+        aarch64) JUICITY_ARCH="arm64" ;; \
+        armv7l) JUICITY_ARCH="armv7" ;; \
+        *) echo "Unsupported architecture: $ARCH" && exit 1 ;; \
+    esac \
+    && curl -L -o /tmp/juicity.zip "https://github.com/juicity/juicity/releases/download/${JUICITY_VERSION}/juicity-linux-${JUICITY_ARCH}.zip" \
+    && unzip -j /tmp/juicity.zip juicity-server -d /usr/local/bin \
+    && chmod +x /usr/local/bin/juicity-server \
+    && rm /tmp/juicity.zip \
+    && echo "Juicity ${JUICITY_VERSION} installed"
+
 COPY ./requirements.txt /code/
 RUN pip install --no-cache-dir --upgrade pip setuptools \
     && pip install --no-cache-dir --upgrade -r /code/requirements.txt

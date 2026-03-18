@@ -30,6 +30,8 @@ class ProxyTypes(str, Enum):
     Trojan = "trojan"
     Shadowsocks = "shadowsocks"
     Hysteria2 = "hysteria2"
+    TUIC = "tuic"
+    Juicity = "juicity"
 
     @property
     def account_model(self):
@@ -42,6 +44,10 @@ class ProxyTypes(str, Enum):
         if self == self.Shadowsocks:
             return ShadowsocksAccount
         if self == self.Hysteria2:
+            return None
+        if self == self.TUIC:
+            return None
+        if self == self.Juicity:
             return None
 
     @property
@@ -56,6 +62,10 @@ class ProxyTypes(str, Enum):
             return ShadowsocksSettings
         if self == self.Hysteria2:
             return Hysteria2Settings
+        if self == self.TUIC:
+            return TUICSettings
+        if self == self.Juicity:
+            return JuicitySettings
 
 
 class ProxySettings(BaseModel, use_enum_values=True):
@@ -104,6 +114,24 @@ class Hysteria2Settings(ProxySettings):
     password: str = Field(default_factory=random_password)
 
     def revoke(self):
+        self.password = random_password()
+
+
+class TUICSettings(ProxySettings):
+    uuid: UUID = Field(default_factory=uuid4)
+    password: str = Field(default_factory=random_password)
+
+    def revoke(self):
+        self.uuid = uuid4()
+        self.password = random_password()
+
+
+class JuicitySettings(ProxySettings):
+    uuid: UUID = Field(default_factory=uuid4)
+    password: str = Field(default_factory=random_password)
+
+    def revoke(self):
+        self.uuid = uuid4()
         self.password = random_password()
 
 

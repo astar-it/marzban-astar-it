@@ -466,6 +466,70 @@ const RadioCard: FC<
               </FormControl>
             </VStack>
           )}
+          {title === "tuic" && isSelected && (
+            <VStack alignItems="flex-start" w="full">
+              <FormControl height="66px">
+                <Text fontSize="sm" pb={1}>
+                  UUID
+                </Text>
+                <Input
+                  fontSize="xs"
+                  size="sm"
+                  borderRadius="6px"
+                  pl={2}
+                  pr={2}
+                  placeholder={t("userDialog.generatedByDefault")}
+                  {...form.register("proxies.tuic.uuid")}
+                />
+              </FormControl>
+              <FormControl height="66px">
+                <Text fontSize="sm" pb={1}>
+                  {t("password")}
+                </Text>
+                <Input
+                  fontSize="xs"
+                  size="sm"
+                  borderRadius="6px"
+                  pl={2}
+                  pr={2}
+                  placeholder={t("userDialog.generatedByDefault")}
+                  {...form.register("proxies.tuic.password")}
+                />
+              </FormControl>
+            </VStack>
+          )}
+          {title === "juicity" && isSelected && (
+            <VStack alignItems="flex-start" w="full">
+              <FormControl height="66px">
+                <Text fontSize="sm" pb={1}>
+                  UUID
+                </Text>
+                <Input
+                  fontSize="xs"
+                  size="sm"
+                  borderRadius="6px"
+                  pl={2}
+                  pr={2}
+                  placeholder={t("userDialog.generatedByDefault")}
+                  {...form.register("proxies.juicity.uuid")}
+                />
+              </FormControl>
+              <FormControl height="66px">
+                <Text fontSize="sm" pb={1}>
+                  {t("password")}
+                </Text>
+                <Input
+                  fontSize="xs"
+                  size="sm"
+                  borderRadius="6px"
+                  pl={2}
+                  pr={2}
+                  placeholder={t("userDialog.generatedByDefault")}
+                  {...form.register("proxies.juicity.password")}
+                />
+              </FormControl>
+            </VStack>
+          )}
         </VStack>
       </AccordionPanel>
     </AccordionItem>

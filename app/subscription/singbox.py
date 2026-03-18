@@ -49,10 +49,10 @@ class SingBoxConfiguration(str):
         self.config["outbounds"].append(outbound_data)
 
     def render(self, reverse=False):
-        urltest_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2"]
+        urltest_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2", "tuic", "juicity"]
         urltest_tags = [outbound["tag"]
                         for outbound in self.config["outbounds"] if outbound["type"] in urltest_types]
-        selector_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2", "urltest"]
+        selector_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2", "tuic", "juicity", "urltest"]
         selector_tags = [outbound["tag"]
                          for outbound in self.config["outbounds"] if outbound["type"] in selector_types]
 
@@ -287,6 +287,10 @@ class SingBoxConfiguration(str):
 
         if inbound['protocol'] == 'hysteria2':
             return self._add_hysteria2(remark, address, inbound, settings)
+        if inbound['protocol'] == 'tuic':
+            return self._add_tuic(remark, address, inbound, settings)
+        if inbound['protocol'] == 'juicity':
+            return self._add_juicity(remark, address, inbound, settings)
 
         net = inbound["network"]
         path = inbound["path"]
@@ -365,4 +369,37 @@ class SingBoxConfiguration(str):
                 "password": obfs_password,
             }
 
+        self.add_outbound(outbound)
+
+    def _add_tuic(self, remark: str, address: str, inbound: dict, settings: dict):
+        remark = self._remark_validation(remark)
+        self.proxy_remarks.append(remark)
+
+        outbound = {
+            "type": "tuic",
+            "tag": remark,
+            "server": address,
+            "server_port": inbound['port'],
+            "uuid": str(settings.get('uuid', '')),
+            "password": settings['password'],
+            "congestion_control": "bbr",
+            "udp_relay_mode": "native",
+            "tls": {"enabled": True, "insecure": True},
+        }
+        self.add_outbound(outbound)
+
+    def _add_juicity(self, remark: str, address: str, inbound: dict, settings: dict):
+        remark = self._remark_validation(remark)
+        self.proxy_remarks.append(remark)
+
+        outbound = {
+            "type": "juicity",
+            "tag": remark,
+            "server": address,
+            "server_port": inbound['port'],
+            "uuid": str(settings.get('uuid', '')),
+            "password": settings['password'],
+            "congestion_control": "bbr",
+            "tls": {"enabled": True, "insecure": True},
+        }
         self.add_outbound(outbound)

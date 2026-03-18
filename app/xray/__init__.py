@@ -11,6 +11,10 @@ from app.xray.node import XRayNode
 from config import (
     HYSTERIA2_ENABLED,
     HYSTERIA2_PORT,
+    JUICITY_ENABLED,
+    JUICITY_PORT,
+    TUIC_ENABLED,
+    TUIC_PORT,
     XRAY_ASSETS_PATH,
     XRAY_EXECUTABLE_PATH,
     XRAY_JSON,
@@ -53,6 +57,40 @@ if HYSTERIA2_ENABLED:
     config.inbounds.append(_hy2_inbound)
     config.inbounds_by_tag["Hysteria2"] = _hy2_inbound
     config.inbounds_by_protocol["hysteria2"] = [_hy2_inbound]
+
+if TUIC_ENABLED:
+    _tuic_inbound = {
+        "tag": "TUIC",
+        "protocol": "tuic",
+        "network": "quic",
+        "tls": "tls",
+        "port": TUIC_PORT,
+        "sni": [],
+        "host": [],
+        "path": "",
+        "header_type": "",
+        "is_fallback": False,
+    }
+    config.inbounds.append(_tuic_inbound)
+    config.inbounds_by_tag["TUIC"] = _tuic_inbound
+    config.inbounds_by_protocol["tuic"] = [_tuic_inbound]
+
+if JUICITY_ENABLED:
+    _juicity_inbound = {
+        "tag": "Juicity",
+        "protocol": "juicity",
+        "network": "quic",
+        "tls": "tls",
+        "port": JUICITY_PORT,
+        "sni": [],
+        "host": [],
+        "path": "",
+        "header_type": "",
+        "is_fallback": False,
+    }
+    config.inbounds.append(_juicity_inbound)
+    config.inbounds_by_tag["Juicity"] = _juicity_inbound
+    config.inbounds_by_protocol["juicity"] = [_juicity_inbound]
 
 
 if TYPE_CHECKING:

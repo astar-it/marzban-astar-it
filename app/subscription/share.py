@@ -257,7 +257,7 @@ def process_inbounds_and_tags(
         if not settings:
             continue
 
-        format_variables.update({"PROTOCOL": protocol.name})
+        format_variables.update({"PROTOCOL": getattr(protocol, "value", protocol)})
         for tag in tags:
             inbound = xray.config.inbounds_by_tag.get(tag)
             if not inbound:

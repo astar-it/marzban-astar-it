@@ -184,6 +184,8 @@
   "userDialog.vlessDesc": "سبک، سریع و امن",
   "userDialog.vmessDesc": "سریع و امن",
   "userDialog.hysteria2Desc": "مبتنی بر UDP، بسیار سریع، ضد سانسور",
+  "userDialog.tuicDesc": "مبتنی بر QUIC، 0-RTT، تأخیر کم",
+  "userDialog.juicityDesc": "مبتنی بر QUIC، پایدار، ضد سانسور",
   "userDialog.warningNoProtocol": "لطفا حداقل یک پروتکل انتخاب کنید",
   "userDialog.weeks": "هفته‌ها",
   "userDialog.connectionLimit": "محدودیت اتصال",
