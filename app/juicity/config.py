@@ -10,24 +10,27 @@ from config import JUICITY_CONGESTION_CONTROL, JUICITY_PORT
 def get_juicity_users():
     """Get all active Juicity users (uuid, password) from DB."""
     users = {}
-    with GetDB() as db:
-        rows = (
-            db.query(db_models.Proxy)
-            .join(db_models.User)
-            .filter(
-                db_models.Proxy.type == ProxyTypes.Juicity,
-                db_models.User.status.in_([UserStatus.active, UserStatus.on_hold]),
+    try:
+        with GetDB() as db:
+            rows = (
+                db.query(db_models.Proxy)
+                .join(db_models.User)
+                .filter(
+                    db_models.Proxy.type == ProxyTypes.Juicity,
+                    db_models.User.status.in_([UserStatus.active, UserStatus.on_hold]),
+                )
+                .all()
             )
-            .all()
-        )
-        for proxy in rows:
-            settings = proxy.settings or {}
-            if not isinstance(settings, dict):
-                continue
-            uuid_val = settings.get("uuid")
-            password = settings.get("password")
-            if uuid_val and password:
-                users[str(uuid_val)] = str(password)
+    except Exception:
+        return users
+    for proxy in rows:
+        settings = proxy.settings or {}
+        if not isinstance(settings, dict):
+            continue
+        uuid_val = settings.get("uuid")
+        password = settings.get("password")
+        if uuid_val and password:
+            users[str(uuid_val)] = str(password)
     return users
 
 

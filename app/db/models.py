@@ -203,13 +203,20 @@ class UserUsageResetLogs(Base):
     reset_at = Column(DateTime, default=datetime.utcnow)
 
 
+# DB enum values: original (VMess, VLESS, ...) + migrations (hysteria2, tuic, juicity)
+_PROXY_TYPE_DB_VALUES = ["VMess", "VLESS", "Trojan", "Shadowsocks", "hysteria2", "tuic", "juicity"]
+
+
 class Proxy(Base):
     __tablename__ = "proxies"
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="proxies")
-    type = Column(Enum(ProxyTypes), nullable=False)
+    type = Column(
+        Enum(ProxyTypes, values_callable=lambda x: _PROXY_TYPE_DB_VALUES),
+        nullable=False,
+    )
     settings = Column(JSON, nullable=False)
     excluded_inbounds = relationship(
         "ProxyInbound", secondary=excluded_inbounds_association
