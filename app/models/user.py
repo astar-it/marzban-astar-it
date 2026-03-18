@@ -94,6 +94,12 @@ class User(BaseModel):
     def validate_proxies(cls, v, values, **kwargs):
         if not v:
             raise ValueError("Each user needs at least one proxy")
+        if isinstance(v, list):
+            return {
+                item.type: ProxySettings.from_dict(
+                    item.type, item.settings if isinstance(item.settings, dict) else {})
+                for item in v
+            }
         return {
             proxy_type: ProxySettings.from_dict(
                 proxy_type, v.get(proxy_type, {}))
@@ -269,6 +275,12 @@ class UserModify(User):
 
     @field_validator("proxies", mode="before")
     def validate_proxies(cls, v):
+        if isinstance(v, list):
+            return {
+                item.type: ProxySettings.from_dict(
+                    item.type, item.settings if isinstance(item.settings, dict) else {})
+                for item in v
+            }
         return {
             proxy_type: ProxySettings.from_dict(
                 proxy_type, v.get(proxy_type, {}))

@@ -255,6 +255,12 @@ def process_inbounds_and_tags(
     for protocol, tags in inbounds:
         settings = proxies.get(protocol)
         if not settings:
+            proto_val = getattr(protocol, "value", protocol)
+            for pk, pv in proxies.items():
+                if getattr(pk, "value", pk) == proto_val:
+                    settings = pv
+                    break
+        if not settings:
             continue
 
         format_variables.update({"PROTOCOL": getattr(protocol, "value", protocol)})
