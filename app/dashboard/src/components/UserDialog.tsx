@@ -794,27 +794,29 @@ export const UserDialog: FC<UserDialogProps> = () => {
                     }
                   >
                     <FormLabel>{t("userDialog.protocols")}</FormLabel>
-                    <Controller
-                      control={form.control}
-                      name="selected_proxies"
-                      render={({ field }) => {
-                        const protocolList = (
-                          Object.keys(PROTOCOL_DESCRIPTIONS) as ProtocolType[]
-                        ).map((p) => ({
-                          title: PROTOCOL_DESCRIPTIONS[p].title,
-                          description: t(
-                            PROTOCOL_DESCRIPTIONS[p].descriptionKey
-                          ),
-                        }));
-                        return (
-                          <RadioGroup
-                            list={protocolList}
-                            disabled={disabled}
-                            {...field}
-                          />
-                        );
-                      }}
-                    />
+                    <Box maxH="400px" overflowY="auto" pr={1}>
+                      <Controller
+                        control={form.control}
+                        name="selected_proxies"
+                        render={({ field }) => {
+                          const protocolList = (
+                            Object.keys(PROTOCOL_DESCRIPTIONS) as ProtocolType[]
+                          ).map((p) => ({
+                            title: PROTOCOL_DESCRIPTIONS[p].title,
+                            description: t(
+                              PROTOCOL_DESCRIPTIONS[p].descriptionKey
+                            ),
+                          }));
+                          return (
+                            <RadioGroup
+                              list={protocolList}
+                              disabled={disabled}
+                              {...field}
+                            />
+                          );
+                        }}
+                      />
+                    </Box>
                     <FormErrorMessage>
                       {t(
                         form.formState.errors.selected_proxies
