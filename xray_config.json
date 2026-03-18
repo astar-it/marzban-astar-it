@@ -33,11 +33,11 @@
         "security": "reality",
         "realitySettings": {
           "show": false,
-          "dest": "www.bing.com:443",
+          "dest": "www.cloudflare.com:443",
           "xver": 0,
           "serverNames": [
-            "www.bing.com",
-            "bing.com"
+            "www.cloudflare.com",
+            "cloudflare.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
           "shortIds": ["", "0123456789abcdef"]
@@ -65,11 +65,11 @@
         "security": "reality",
         "realitySettings": {
           "show": false,
-          "dest": "www.bing.com:443",
+          "dest": "www.cloudflare.com:443",
           "xver": 0,
           "serverNames": [
-            "www.bing.com",
-            "bing.com"
+            "www.cloudflare.com",
+            "cloudflare.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
           "shortIds": ["", "0123456789abcdef"]
