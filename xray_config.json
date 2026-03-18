@@ -33,11 +33,11 @@
         "security": "reality",
         "realitySettings": {
           "show": false,
-          "dest": "www.google.com:443",
+          "dest": "www.bing.com:443",
           "xver": 0,
           "serverNames": [
-            "www.google.com",
-            "google.com"
+            "www.bing.com",
+            "bing.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
           "shortIds": ["", "0123456789abcdef"]
@@ -65,11 +65,11 @@
         "security": "reality",
         "realitySettings": {
           "show": false,
-          "dest": "www.google.com:443",
+          "dest": "www.bing.com:443",
           "xver": 0,
           "serverNames": [
-            "www.google.com",
-            "google.com"
+            "www.bing.com",
+            "bing.com"
           ],
           "privateKey": "YOUR_PRIVATE_KEY_HERE",
           "shortIds": ["", "0123456789abcdef"]
