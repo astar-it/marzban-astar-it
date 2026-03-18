@@ -169,11 +169,7 @@ if [ "${HYSTERIA2_ENABLED:-true}" = "true" ] && command -v hysteria >/dev/null 2
     echo "========================================"
     echo "Generating Hysteria2 config..."
     echo "========================================"
-    python -c "
-from app.hysteria.config import write_hysteria2_config
-write_hysteria2_config('/var/lib/marzban/hysteria2.json')
-print('Hysteria2 config written to /var/lib/marzban/hysteria2.json')
-" 2>&1 || echo "WARNING: Failed to generate Hysteria2 config"
+    python /code/scripts/generate_hysteria2_config.py 2>&1 || echo "WARNING: Failed to generate Hysteria2 config"
 fi
 
 # Run migrations and start app
