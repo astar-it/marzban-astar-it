@@ -315,9 +315,10 @@ class UserResponse(User):
             salt = secrets.token_hex(8)
             url_prefix = (XRAY_SUBSCRIPTION_URL_PREFIX).replace('*', salt)
             token = create_subscription_token(self.username)
-            # API routes are under /api; when url_prefix empty use relative path with /api
             if url_prefix:
                 base = url_prefix.rstrip("/")
+                if not base.endswith(f"/{API_PREFIX}"):
+                    base = f"{base}/{API_PREFIX}"
                 self.subscription_url = f"{base}/{XRAY_SUBSCRIPTION_PATH}/{token}"
             else:
                 self.subscription_url = f"/{API_PREFIX}/{XRAY_SUBSCRIPTION_PATH}/{token}"
