@@ -136,6 +136,15 @@ DISABLE_RECORDING_NODE_USAGE = config("DISABLE_RECORDING_NODE_USAGE", cast=bool,
 # Default connection limit for users (0 = unlimited)
 DEFAULT_USER_CONNECTION_LIMIT = config("DEFAULT_USER_CONNECTION_LIMIT", cast=int, default=0)
 
+# Hysteria2 settings
+HYSTERIA2_ENABLED = config("HYSTERIA2_ENABLED", default=True, cast=bool)
+HYSTERIA2_PORT = config("HYSTERIA2_PORT", cast=int, default=4443)
+HYSTERIA2_OBFS_PASSWORD = config("HYSTERIA2_OBFS_PASSWORD", default="")
+HYSTERIA2_UP_MBPS = config("HYSTERIA2_UP_MBPS", cast=int, default=100)
+HYSTERIA2_DOWN_MBPS = config("HYSTERIA2_DOWN_MBPS", cast=int, default=100)
+HYSTERIA2_MASQUERADE_URL = config("HYSTERIA2_MASQUERADE_URL", default="https://www.bing.com")
+HYSTERIA2_EXECUTABLE_PATH = config("HYSTERIA2_EXECUTABLE_PATH", default="/usr/local/bin/hysteria")
+
 # headers: profile-update-interval, support-url, profile-title
 SUB_UPDATE_INTERVAL = config("SUB_UPDATE_INTERVAL", default="12")
 SUB_SUPPORT_URL = config("SUB_SUPPORT_URL", default="https://t.me/")

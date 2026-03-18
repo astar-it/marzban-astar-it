@@ -61,6 +61,9 @@ def add_user(dbuser: "DBUser"):
     email = f"{dbuser.id}.{dbuser.username}"
 
     for proxy_type, inbound_tags in user.inbounds.items():
+        if proxy_type.account_model is None:
+            continue
+
         for inbound_tag in inbound_tags:
             inbound = xray.config.inbounds_by_tag.get(inbound_tag, {})
 
@@ -106,6 +109,11 @@ def update_user(dbuser: "DBUser"):
 
     active_inbounds = []
     for proxy_type, inbound_tags in user.inbounds.items():
+        if proxy_type.account_model is None:
+            for tag in inbound_tags:
+                active_inbounds.append(tag)
+            continue
+
         for inbound_tag in inbound_tags:
             active_inbounds.append(inbound_tag)
             inbound = xray.config.inbounds_by_tag.get(inbound_tag, {})

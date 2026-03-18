@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260126-v14
+ARG BUILD_VERSION=20260126-v15
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -33,6 +33,23 @@ RUN set -ex \
     && mv /tmp/xray/*.dat /usr/local/share/xray/ \
     && rm -rf /tmp/xray /tmp/xray.zip \
     && echo "Xray ${XRAY_VERSION} installed"
+
+# Install Hysteria2
+ARG HYSTERIA_VERSION=latest
+RUN set -ex \
+    && if [ "$HYSTERIA_VERSION" = "latest" ]; then \
+        HYSTERIA_VERSION=$(curl -s https://api.github.com/repos/apernet/hysteria/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/'); \
+    fi \
+    && ARCH=$(uname -m) \
+    && case "$ARCH" in \
+        x86_64) HY_ARCH="amd64" ;; \
+        aarch64) HY_ARCH="arm64" ;; \
+        armv7l) HY_ARCH="armv7" ;; \
+        *) echo "Unsupported architecture: $ARCH" && exit 1 ;; \
+    esac \
+    && curl -L -o /usr/local/bin/hysteria "https://github.com/apernet/hysteria/releases/download/${HYSTERIA_VERSION}/hysteria-linux-${HY_ARCH}" \
+    && chmod +x /usr/local/bin/hysteria \
+    && echo "Hysteria2 ${HYSTERIA_VERSION} installed"
 
 COPY ./requirements.txt /code/
 RUN pip install --no-cache-dir --upgrade pip setuptools \
@@ -146,6 +163,18 @@ fi
 
 # Ensure setuptools with pkg_resources is available (needed by apscheduler)
 pip install --no-cache-dir 'setuptools==70.3.0' 2>/dev/null || true
+
+# Generate Hysteria2 config if enabled
+if [ "${HYSTERIA2_ENABLED:-true}" = "true" ] && command -v hysteria >/dev/null 2>&1; then
+    echo "========================================"
+    echo "Generating Hysteria2 config..."
+    echo "========================================"
+    python -c "
+from app.hysteria.config import write_hysteria2_config
+write_hysteria2_config('/var/lib/marzban/hysteria2.json')
+print('Hysteria2 config written to /var/lib/marzban/hysteria2.json')
+" 2>&1 || echo "WARNING: Failed to generate Hysteria2 config"
+fi
 
 # Run migrations and start app
 alembic upgrade head

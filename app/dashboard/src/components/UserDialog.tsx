@@ -780,6 +780,10 @@ export const UserDialog: FC<UserDialogProps> = () => {
                                 title: "shadowsocks",
                                 description: t("userDialog.shadowsocksDesc"),
                               },
+                              {
+                                title: "hysteria2",
+                                description: t("userDialog.hysteria2Desc"),
+                              },
                             ]}
                             disabled={disabled}
                             {...field}

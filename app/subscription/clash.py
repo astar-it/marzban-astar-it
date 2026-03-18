@@ -254,6 +254,9 @@ class ClashConfiguration(object):
         return node
 
     def add(self, remark: str, address: str, inbound: dict, settings: dict):
+        # hysteria2 not supported by regular clash
+        if inbound['protocol'] == 'hysteria2':
+            return
         # not supported by clash
         if inbound['network'] in ("kcp", "splithttp", "xhttp"):
             return
@@ -345,6 +348,9 @@ class ClashMetaConfiguration(ClashConfiguration):
         return node
 
     def add(self, remark: str, address: str, inbound: dict, settings: dict):
+        if inbound['protocol'] == 'hysteria2':
+            return self._add_hysteria2(remark, address, inbound, settings)
+
         # not supported by clash-meta
         if inbound['network'] in ("kcp", "splithttp", "xhttp") or (inbound['network'] == "quic" and inbound["header_type"] != "none"):
             return
@@ -394,5 +400,25 @@ class ClashMetaConfiguration(ClashConfiguration):
         else:
             return
 
+        self.data['proxies'].append(node)
+        self.proxy_remarks.append(proxy_remark)
+
+    def _add_hysteria2(self, remark: str, address: str, inbound: dict, settings: dict):
+        proxy_remark = self._remark_validation(remark)
+        node = {
+            'name': proxy_remark,
+            'type': 'hysteria2',
+            'server': address,
+            'port': inbound['port'],
+            'password': settings['password'],
+            'skip-cert-verify': True,
+        }
+        obfs_password = inbound.get('obfs_password', '')
+        if obfs_password:
+            node['obfs'] = 'salamander'
+            node['obfs-password'] = obfs_password
+        sni = inbound.get('sni', '')
+        if sni:
+            node['sni'] = sni
         self.data['proxies'].append(node)
         self.proxy_remarks.append(proxy_remark)

@@ -178,6 +178,8 @@ class XRayConfig(dict):
         for inbound in self['inbounds']:
             if not inbound['protocol'] in ProxyTypes._value2member_map_:
                 continue
+            if inbound['protocol'] == 'hysteria2':
+                continue
 
             if inbound['tag'] in XRAY_EXCLUDE_INBOUND_TAGS:
                 continue
@@ -436,6 +438,8 @@ class XRayConfig(dict):
                 ))
 
             for proxy_type, rows in grouped_data.items():
+                if proxy_type == 'hysteria2':
+                    continue
 
                 inbounds = self.inbounds_by_protocol.get(proxy_type)
                 if not inbounds:

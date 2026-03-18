@@ -49,10 +49,10 @@ class SingBoxConfiguration(str):
         self.config["outbounds"].append(outbound_data)
 
     def render(self, reverse=False):
-        urltest_types = ["vmess", "vless", "trojan", "shadowsocks"]
+        urltest_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2"]
         urltest_tags = [outbound["tag"]
                         for outbound in self.config["outbounds"] if outbound["type"] in urltest_types]
-        selector_types = ["vmess", "vless", "trojan", "shadowsocks", "urltest"]
+        selector_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2", "urltest"]
         selector_tags = [outbound["tag"]
                          for outbound in self.config["outbounds"] if outbound["type"] in selector_types]
 
@@ -285,6 +285,9 @@ class SingBoxConfiguration(str):
 
     def add(self, remark: str, address: str, inbound: dict, settings: dict):
 
+        if inbound['protocol'] == 'hysteria2':
+            return self._add_hysteria2(remark, address, inbound, settings)
+
         net = inbound["network"]
         path = inbound["path"]
 
@@ -332,5 +335,34 @@ class SingBoxConfiguration(str):
         elif inbound['protocol'] == 'shadowsocks':
             outbound['password'] = settings['password']
             outbound['method'] = settings['method']
+
+        self.add_outbound(outbound)
+
+    def _add_hysteria2(self, remark: str, address: str, inbound: dict, settings: dict):
+        remark = self._remark_validation(remark)
+        self.proxy_remarks.append(remark)
+
+        outbound = {
+            "type": "hysteria2",
+            "tag": remark,
+            "server": address,
+            "server_port": inbound['port'],
+            "password": settings['password'],
+            "tls": {
+                "enabled": True,
+                "insecure": True,
+            },
+        }
+
+        sni = inbound.get('sni', '')
+        if sni:
+            outbound['tls']['server_name'] = sni
+
+        obfs_password = inbound.get('obfs_password', '')
+        if obfs_password:
+            outbound['obfs'] = {
+                "type": "salamander",
+                "password": obfs_password,
+            }
 
         self.add_outbound(outbound)

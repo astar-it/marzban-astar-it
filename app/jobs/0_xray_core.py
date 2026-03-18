@@ -85,6 +85,27 @@ def start_core():
     except Exception:
         traceback.print_exc()
 
+    # Hysteria2 core
+    from config import HYSTERIA2_ENABLED
+    if HYSTERIA2_ENABLED:
+        try:
+            from app.hysteria.core import Hysteria2Core
+            from config import HYSTERIA2_EXECUTABLE_PATH
+            import os
+
+            hy2_config_path = "/var/lib/marzban/hysteria2.json"
+            if os.path.isfile(hy2_config_path) and os.path.isfile(HYSTERIA2_EXECUTABLE_PATH):
+                global _hysteria2_core
+                _hysteria2_core = Hysteria2Core(HYSTERIA2_EXECUTABLE_PATH)
+                version = _hysteria2_core.get_version()
+                logger.info(f"Starting Hysteria2 core ({version})")
+                _hysteria2_core.start(hy2_config_path)
+            else:
+                logger.warning("Hysteria2 enabled but binary or config not found, skipping")
+        except Exception:
+            logger.warning("Failed to start Hysteria2 core")
+            traceback.print_exc()
+
     # nodes' core
     logger.info("Starting nodes Xray core")
     with GetDB() as db:
@@ -105,6 +126,10 @@ def start_core():
 def app_shutdown():
     logger.info("Stopping main Xray core")
     xray.core.stop()
+
+    if '_hysteria2_core' in globals() and _hysteria2_core:
+        logger.info("Stopping Hysteria2 core")
+        _hysteria2_core.stop()
 
     logger.info("Stopping nodes Xray core")
     for node in list(xray.nodes.values()):

@@ -177,6 +177,7 @@
   "userDialog.userEdited": "Пользователь {{username}} изменён.",
   "userDialog.vlessDesc": "Легковесный, быстрый и безопасный",
   "userDialog.vmessDesc": "Быстрый и безопасный",
+  "userDialog.hysteria2Desc": "На основе UDP, сверхбыстрый, обход блокировок",
   "userDialog.warningNoProtocol": "Пожалуйста, выберите хотя бы один протокол",
   "userDialog.weeks": "Недели",
   "userDialog.connectionLimit": "Лимит подключений",

@@ -183,6 +183,7 @@
   "userDialog.userEdited": "کاربر {{username}} ویرایش شد.",
   "userDialog.vlessDesc": "سبک، سریع و امن",
   "userDialog.vmessDesc": "سریع و امن",
+  "userDialog.hysteria2Desc": "مبتنی بر UDP، بسیار سریع، ضد سانسور",
   "userDialog.warningNoProtocol": "لطفا حداقل یک پروتکل انتخاب کنید",
   "userDialog.weeks": "هفته‌ها",
   "userDialog.connectionLimit": "محدودیت اتصال",

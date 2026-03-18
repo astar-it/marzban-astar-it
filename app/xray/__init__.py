@@ -8,7 +8,13 @@ from app.xray import operations
 from app.xray.config import XRayConfig
 from app.xray.core import XRayCore
 from app.xray.node import XRayNode
-from config import XRAY_ASSETS_PATH, XRAY_EXECUTABLE_PATH, XRAY_JSON
+from config import (
+    HYSTERIA2_ENABLED,
+    HYSTERIA2_PORT,
+    XRAY_ASSETS_PATH,
+    XRAY_EXECUTABLE_PATH,
+    XRAY_JSON,
+)
 from xray_api import XRay as XRayAPI
 from xray_api import exceptions, types
 from xray_api import exceptions as exc
@@ -27,6 +33,26 @@ finally:
 api = XRayAPI(config.api_host, config.api_port)
 
 nodes: Dict[int, XRayNode] = {}
+
+if HYSTERIA2_ENABLED:
+    from config import HYSTERIA2_OBFS_PASSWORD
+
+    _hy2_inbound = {
+        "tag": "Hysteria2",
+        "protocol": "hysteria2",
+        "network": "hysteria2",
+        "tls": "tls",
+        "port": HYSTERIA2_PORT,
+        "sni": [],
+        "host": [],
+        "path": "",
+        "header_type": "",
+        "is_fallback": False,
+        "obfs_password": HYSTERIA2_OBFS_PASSWORD,
+    }
+    config.inbounds.append(_hy2_inbound)
+    config.inbounds_by_tag["Hysteria2"] = _hy2_inbound
+    config.inbounds_by_protocol["hysteria2"] = [_hy2_inbound]
 
 
 if TYPE_CHECKING:
