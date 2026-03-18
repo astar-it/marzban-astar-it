@@ -30,29 +30,38 @@ def get_tls():
 
 @threaded_function
 def _add_user_to_inbound(api: XRayAPI, inbound_tag: str, account: Account):
+    if inbound_tag in _NON_XRAY_TAGS:
+        return
     try:
         api.add_inbound_user(tag=inbound_tag, user=account, timeout=30)
-    except (xray.exc.EmailExistsError, xray.exc.ConnectionError):
+    except (xray.exc.EmailExistsError, xray.exc.ConnectionError, xray.exc.TagNotFoundError):
         pass
+
+
+_NON_XRAY_TAGS = frozenset({"Hysteria2", "TUIC", "Juicity"})
 
 
 @threaded_function
 def _remove_user_from_inbound(api: XRayAPI, inbound_tag: str, email: str):
+    if inbound_tag in _NON_XRAY_TAGS:
+        return
     try:
         api.remove_inbound_user(tag=inbound_tag, email=email, timeout=30)
-    except (xray.exc.EmailNotFoundError, xray.exc.ConnectionError):
+    except (xray.exc.EmailNotFoundError, xray.exc.ConnectionError, xray.exc.TagNotFoundError):
         pass
 
 
 @threaded_function
 def _alter_inbound_user(api: XRayAPI, inbound_tag: str, account: Account):
+    if inbound_tag in _NON_XRAY_TAGS:
+        return
     try:
         api.remove_inbound_user(tag=inbound_tag, email=account.email, timeout=30)
-    except (xray.exc.EmailNotFoundError, xray.exc.ConnectionError):
+    except (xray.exc.EmailNotFoundError, xray.exc.ConnectionError, xray.exc.TagNotFoundError):
         pass
     try:
         api.add_inbound_user(tag=inbound_tag, user=account, timeout=30)
-    except (xray.exc.EmailExistsError, xray.exc.ConnectionError):
+    except (xray.exc.EmailExistsError, xray.exc.ConnectionError, xray.exc.TagNotFoundError):
         pass
 
 
