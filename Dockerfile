@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.12
 # Build version to invalidate cache when code changes
-ARG BUILD_VERSION=20260126-v16
+ARG BUILD_VERSION=20260126-v17
 
 FROM python:$PYTHON_VERSION-slim AS build
 
@@ -133,60 +133,59 @@ mkdir -p "$CERT_DIR"
 
 # ──────────────────────────────────────────────────
 # TLS Certificate management
-# Priority: Let's Encrypt (if SSL_CERT_DOMAIN set) > existing certs > self-signed
+# Priority: Coolify/Traefik acme.json > certbot > existing valid cert > self-signed
 # ──────────────────────────────────────────────────
+ACME_JSON="${TRAEFIK_ACME_JSON:-/etc/traefik/acme.json}"
 
 cert_is_valid() {
     [ -f "$CERT_FILE" ] && [ -f "$KEY_FILE" ] && \
     openssl x509 -in "$CERT_FILE" -noout -checkend 86400 2>/dev/null
 }
 
+try_acme_extract() {
+    local domain="$1"
+    if [ -z "$domain" ] || [ ! -f "$ACME_JSON" ]; then
+        return 1
+    fi
+    echo "========================================"
+    echo "Extracting certificate for $domain from Coolify/Traefik..."
+    echo "========================================"
+    python /code/scripts/extract_traefik_cert.py \
+        "$domain" "$ACME_JSON" "$CERT_FILE" "$KEY_FILE" 2>&1
+    return $?
+}
+
 try_certbot() {
     local domain="$1"
     local email="$2"
     local le_live="/etc/letsencrypt/live/$domain"
-
-    if [ -z "$domain" ]; then
-        return 1
-    fi
+    [ -z "$domain" ] && return 1
+    command -v certbot >/dev/null 2>&1 || return 1
 
     local email_arg="--register-unsafely-without-email"
-    if [ -n "$email" ]; then
-        email_arg="--email $email"
-    fi
+    [ -n "$email" ] && email_arg="--email $email"
 
     echo "========================================"
     echo "Obtaining Let's Encrypt certificate for $domain ..."
     echo "========================================"
-
-    certbot certonly \
-        --standalone \
-        --preferred-challenges http \
+    certbot certonly --standalone --preferred-challenges http \
         --http-01-port "${SSL_HTTP_PORT:-80}" \
-        --non-interactive \
-        --agree-tos \
-        $email_arg \
-        -d "$domain" \
-        --cert-name "$domain" \
-        --keep-until-expiring \
-        --deploy-hook "cp '$le_live/fullchain.pem' '$CERT_FILE' && cp '$le_live/privkey.pem' '$KEY_FILE'" \
+        --non-interactive --agree-tos $email_arg \
+        -d "$domain" --cert-name "$domain" --keep-until-expiring \
         2>&1 && LE_OK=1 || LE_OK=0
 
     if [ "$LE_OK" = "1" ] && [ -f "$le_live/fullchain.pem" ]; then
         cp "$le_live/fullchain.pem" "$CERT_FILE"
         cp "$le_live/privkey.pem" "$KEY_FILE"
         echo "Let's Encrypt certificate installed!"
-        # Set up daily cron renewal
         echo "0 3 * * * certbot renew --quiet --http-01-port ${SSL_HTTP_PORT:-80} --deploy-hook \"cp '$le_live/fullchain.pem' '$CERT_FILE' && cp '$le_live/privkey.pem' '$KEY_FILE'\"" \
             > /etc/cron.d/certbot-renew
         chmod 0644 /etc/cron.d/certbot-renew
         cron
-        echo "Auto-renewal cron job installed (daily at 3:00 AM)"
         return 0
-    else
-        echo "WARNING: certbot failed. Check that port ${SSL_HTTP_PORT:-80} is reachable and $domain points to this server."
-        return 1
     fi
+    echo "WARNING: certbot failed."
+    return 1
 }
 
 generate_self_signed() {
@@ -194,31 +193,29 @@ generate_self_signed() {
     echo "Generating self-signed TLS certificate..."
     echo "========================================"
     local san="DNS:localhost,IP:127.0.0.1"
-    if [ -n "$SSL_CERT_DOMAIN" ]; then
-        san="DNS:$SSL_CERT_DOMAIN,$san"
-    fi
+    [ -n "$SSL_CERT_DOMAIN" ] && san="DNS:$SSL_CERT_DOMAIN,$san"
     openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
         -sha256 -days 3650 -nodes \
-        -keyout "$KEY_FILE" \
-        -out "$CERT_FILE" \
+        -keyout "$KEY_FILE" -out "$CERT_FILE" \
         -subj "/CN=${SSL_CERT_DOMAIN:-marzban}" \
         -addext "subjectAltName=$san"
-    echo "Self-signed certificate generated. Set SSL_CERT_DOMAIN for real Let's Encrypt cert."
+    echo "Self-signed cert generated. Set SSL_CERT_DOMAIN + mount acme.json for real cert."
 }
 
 # Decide cert strategy
+GOT_CERT=0
 if [ -n "$SSL_CERT_DOMAIN" ]; then
-    if cert_is_valid; then
-        ISSUER=$(openssl x509 -in "$CERT_FILE" -noout -issuer 2>/dev/null || true)
-        if echo "$ISSUER" | grep -qi "Let's Encrypt\|R3\|R10\|R11\|E5\|E6"; then
-            echo "Valid Let's Encrypt cert found, attempting renewal check..."
-            try_certbot "$SSL_CERT_DOMAIN" "${SSL_CERT_EMAIL:-}" || true
-        else
-            echo "Existing cert found but not from Let's Encrypt. Trying certbot..."
-            try_certbot "$SSL_CERT_DOMAIN" "${SSL_CERT_EMAIL:-}" || echo "Keeping existing certificate."
-        fi
-    else
-        try_certbot "$SSL_CERT_DOMAIN" "${SSL_CERT_EMAIL:-}" || generate_self_signed
+    # 1) Try Coolify/Traefik acme.json (best for Coolify deployments)
+    try_acme_extract "$SSL_CERT_DOMAIN" && GOT_CERT=1
+
+    # 2) Fallback to certbot standalone
+    if [ "$GOT_CERT" = "0" ]; then
+        try_certbot "$SSL_CERT_DOMAIN" "${SSL_CERT_EMAIL:-}" && GOT_CERT=1
+    fi
+
+    # 3) Fallback to self-signed
+    if [ "$GOT_CERT" = "0" ] && ! cert_is_valid; then
+        generate_self_signed
     fi
 else
     if ! cert_is_valid; then
