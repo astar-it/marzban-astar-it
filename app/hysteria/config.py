@@ -23,7 +23,7 @@ def generate_hysteria2_config(
         "auth": {
             "type": "http",
             "http": {
-                "url": f"http://127.0.0.1:{UVICORN_PORT}/hysteria2/auth",
+                "url": f"http://127.0.0.1:{UVICORN_PORT}/api/hysteria2/auth",
                 "insecure": True,
             },
         },

@@ -95,10 +95,16 @@ def start_core():
     if HYSTERIA2_ENABLED:
         try:
             from app.hysteria.core import Hysteria2Core
+            from app.hysteria.config import write_hysteria2_config
             from config import HYSTERIA2_EXECUTABLE_PATH
             import os
 
             hy2_config_path = "/var/lib/marzban/hysteria2.json"
+            cert_path = "/var/lib/marzban/certs/fullchain.pem"
+            key_path = "/var/lib/marzban/certs/privkey.pem"
+            # Generate config if certs exist
+            if os.path.isfile(cert_path) and os.path.isfile(key_path):
+                write_hysteria2_config(hy2_config_path, cert_path, key_path)
             if os.path.isfile(hy2_config_path) and os.path.isfile(HYSTERIA2_EXECUTABLE_PATH):
                 global _hysteria2_core
                 _hysteria2_core = Hysteria2Core(HYSTERIA2_EXECUTABLE_PATH)
@@ -106,7 +112,16 @@ def start_core():
                 logger.info(f"Starting Hysteria2 core ({version})")
                 _hysteria2_core.start(hy2_config_path)
             else:
-                logger.warning("Hysteria2 enabled but binary or config not found, skipping")
+                missing = []
+                if not os.path.isfile(HYSTERIA2_EXECUTABLE_PATH):
+                    missing.append(f"binary ({HYSTERIA2_EXECUTABLE_PATH})")
+                if not os.path.isfile(hy2_config_path):
+                    missing.append(f"config ({hy2_config_path})")
+                if not os.path.isfile(cert_path):
+                    missing.append(f"cert ({cert_path})")
+                if not os.path.isfile(key_path):
+                    missing.append(f"key ({key_path})")
+                logger.warning(f"Hysteria2 enabled but missing: {', '.join(missing)}")
         except Exception:
             logger.warning("Failed to start Hysteria2 core")
             traceback.print_exc()
@@ -178,8 +193,12 @@ def start_core():
                       seconds=JOB_CORE_HEALTH_CHECK_INTERVAL,
                       coalesce=True, max_instances=1)
 
-    # TUIC/Juicity config sync - regenerate when users change
+    # TUIC/Juicity config sync - only restart when user list changes
+    _last_tuic_users = {}
+    _last_juicity_users = {}
+
     def sync_tuic_juicity():
+        nonlocal _last_tuic_users, _last_juicity_users
         global _tuic_core, _juicity_core
         cert_path = "/var/lib/marzban/certs/fullchain.pem"
         key_path = "/var/lib/marzban/certs/privkey.pem"
@@ -187,18 +206,26 @@ def start_core():
             return
         if TUIC_ENABLED:
             try:
-                from app.tuic.config import write_tuic_config
-                write_tuic_config("/var/lib/marzban/tuic.json", cert_path, key_path)
-                if _tuic_core and _tuic_core.started:
-                    _tuic_core.restart()
+                from app.tuic.config import get_tuic_users, write_tuic_config
+                current = get_tuic_users()
+                if current != _last_tuic_users:
+                    _last_tuic_users = current
+                    write_tuic_config("/var/lib/marzban/tuic.json", cert_path, key_path)
+                    if _tuic_core and _tuic_core.started:
+                        _tuic_core.restart()
+                        logger.info("TUIC config updated, core restarted")
             except Exception as e:
                 logger.debug(f"TUIC sync: {e}")
         if JUICITY_ENABLED:
             try:
-                from app.juicity.config import write_juicity_config
-                write_juicity_config("/var/lib/marzban/juicity.json", cert_path, key_path)
-                if _juicity_core and _juicity_core.started:
-                    _juicity_core.restart()
+                from app.juicity.config import get_juicity_users, write_juicity_config
+                current = get_juicity_users()
+                if current != _last_juicity_users:
+                    _last_juicity_users = current
+                    write_juicity_config("/var/lib/marzban/juicity.json", cert_path, key_path)
+                    if _juicity_core and _juicity_core.started:
+                        _juicity_core.restart()
+                        logger.info("Juicity config updated, core restarted")
             except Exception as e:
                 logger.debug(f"Juicity sync: {e}")
 

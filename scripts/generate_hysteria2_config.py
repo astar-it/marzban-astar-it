@@ -20,7 +20,7 @@ def main():
         "auth": {
             "type": "http",
             "http": {
-                "url": f"http://127.0.0.1:{uvicorn_port}/hysteria2/auth",
+                "url": f"http://127.0.0.1:{uvicorn_port}/api/hysteria2/auth",
                 "insecure": True,
             },
         },
