@@ -114,6 +114,7 @@
   "on_hold": "在线",
   "password": "密码",
   "previous": "上一页",
+  "qrcodeDialog.configLinks": "协议链接（在 NekoBox/v2rayNG 中扫描以添加节点）",
   "qrcodeDialog.sublink": "订阅链接",
   "reset": "重置",
   "resetAllUsage": "重置所有统计",

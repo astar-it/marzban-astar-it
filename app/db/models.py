@@ -143,7 +143,9 @@ class User(Base):
         for proxy in self.proxies:
             _[proxy.type] = []
             excluded_tags = [i.tag for i in proxy.excluded_inbounds]
-            for inbound in xray.config.inbounds_by_protocol.get(proxy.type, []):
+            for inbound in xray.config.inbounds_by_protocol.get(
+                getattr(proxy.type, "value", proxy.type), []
+            ):
                 if inbound["tag"] not in excluded_tags:
                     _[proxy.type].append(inbound["tag"])
 

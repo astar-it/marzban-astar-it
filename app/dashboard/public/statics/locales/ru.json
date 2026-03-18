@@ -114,6 +114,7 @@
   "on_hold": "On Hold",
   "password": "Пароль",
   "previous": "Назад",
+  "qrcodeDialog.configLinks": "Ссылки протоколов (сканируйте для добавления узла в NekoBox/v2rayNG)",
   "qrcodeDialog.sublink": "Ссылка на подписку",
   "reset": "Сбросить",
   "resetAllUsage": "Сбросить расход трафика",

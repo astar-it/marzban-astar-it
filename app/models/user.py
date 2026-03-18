@@ -11,7 +11,7 @@ from app.models.admin import Admin
 from app.models.proxy import ProxySettings, ProxyTypes
 from app.subscription.share import generate_v2ray_links
 from app.utils.jwt import create_subscription_token
-from config import XRAY_SUBSCRIPTION_PATH, XRAY_SUBSCRIPTION_URL_PREFIX
+from config import API_PREFIX, XRAY_SUBSCRIPTION_PATH, XRAY_SUBSCRIPTION_URL_PREFIX
 
 USERNAME_REGEXP = re.compile(r"^(?=\w{3,32}\b)[a-zA-Z0-9-_@.]+(?:_[a-zA-Z0-9-_@.]+)*$")
 
@@ -160,7 +160,8 @@ class UserCreate(User):
         excluded = {}
         for proxy_type in self.proxies:
             excluded[proxy_type] = []
-            for inbound in xray.config.inbounds_by_protocol.get(proxy_type, []):
+            _key = getattr(proxy_type, "value", proxy_type)
+            for inbound in xray.config.inbounds_by_protocol.get(_key, []):
                 if not inbound["tag"] in self.inbounds.get(proxy_type, []):
                     excluded[proxy_type].append(inbound["tag"])
 
@@ -188,9 +189,10 @@ class UserCreate(User):
             #     raise ValueError(f"{proxy_type} inbounds cannot be empty")
 
             else:
+                _key = getattr(proxy_type, "value", proxy_type)
                 inbounds[proxy_type] = [
                     i["tag"]
-                    for i in xray.config.inbounds_by_protocol.get(proxy_type, [])
+                    for i in xray.config.inbounds_by_protocol.get(_key, [])
                 ]
 
         return inbounds
@@ -242,7 +244,8 @@ class UserModify(User):
         excluded = {}
         for proxy_type in self.inbounds:
             excluded[proxy_type] = []
-            for inbound in xray.config.inbounds_by_protocol.get(proxy_type, []):
+            _key = getattr(proxy_type, "value", proxy_type)
+            for inbound in xray.config.inbounds_by_protocol.get(_key, []):
                 if not inbound["tag"] in self.inbounds.get(proxy_type, []):
                     excluded[proxy_type].append(inbound["tag"])
 
@@ -312,7 +315,12 @@ class UserResponse(User):
             salt = secrets.token_hex(8)
             url_prefix = (XRAY_SUBSCRIPTION_URL_PREFIX).replace('*', salt)
             token = create_subscription_token(self.username)
-            self.subscription_url = f"{url_prefix}/{XRAY_SUBSCRIPTION_PATH}/{token}"
+            # API routes are under /api; when url_prefix empty use relative path with /api
+            if url_prefix:
+                base = url_prefix.rstrip("/")
+                self.subscription_url = f"{base}/{XRAY_SUBSCRIPTION_PATH}/{token}"
+            else:
+                self.subscription_url = f"/{API_PREFIX}/{XRAY_SUBSCRIPTION_PATH}/{token}"
         return self
 
     @field_validator("proxies", mode="before")

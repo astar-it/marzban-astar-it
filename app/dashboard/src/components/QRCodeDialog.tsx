@@ -97,23 +97,10 @@ export const QRCodeDialog: FC = () => {
               lg: "row",
             }}
           >
-            {subscribeUrl && (
-              <VStack>
-                <QRCode
-                  mx="auto"
-                  size={300}
-                  p="2"
-                  level={"L"}
-                  includeMargin={false}
-                  value={subscribeQrLink}
-                  bg="white"
-                />
-                <Text display="block" textAlign="center" pb={3} mt={1}>
-                  {t("qrcodeDialog.sublink")}
-                </Text>
-              </VStack>
-            )}
             <Box w="300px">
+              <Text fontSize="sm" color="gray.600" _dark={{ color: "gray.400" }} mb={2} textAlign="center">
+                {t("qrcodeDialog.configLinks")}
+              </Text>
               <Slider
                 centerPadding="0px"
                 centerMode={true}
@@ -167,6 +154,22 @@ export const QRCodeDialog: FC = () => {
                 {index + 1} / {QRcodeLinks.length}
               </Text>
             </Box>
+            {subscribeUrl && (
+              <VStack>
+                <QRCode
+                  mx="auto"
+                  size={300}
+                  p="2"
+                  level={"L"}
+                  includeMargin={false}
+                  value={subscribeQrLink}
+                  bg="white"
+                />
+                <Text display="block" textAlign="center" pb={3} mt={1}>
+                  {t("qrcodeDialog.sublink")}
+                </Text>
+              </VStack>
+            )}
           </ModalBody>
         )}
       </ModalContent>

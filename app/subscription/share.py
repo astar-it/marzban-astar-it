@@ -265,7 +265,27 @@ def process_inbounds_and_tags(
 
             format_variables.update({"TRANSPORT": inbound["network"]})
             host_inbound = inbound.copy()
-            for host in xray.hosts.get(tag, []):
+            hosts_list = xray.hosts.get(tag, [])
+            # Fallback for virtual inbounds (hysteria2, tuic, juicity) without hosts
+            if not hosts_list and inbound["protocol"] in ("hysteria2", "tuic", "juicity"):
+                hosts_list = [{
+                    "remark": f"{inbound['protocol'].title()}",
+                    "address": [format_variables["SERVER_IP"]],
+                    "port": inbound["port"],
+                    "path": None,
+                    "sni": inbound.get("sni") or [],
+                    "host": inbound.get("host") or [],
+                    "alpn": None,
+                    "fingerprint": "",
+                    "tls": None,
+                    "allowinsecure": "",
+                    "mux_enable": None,
+                    "fragment_setting": None,
+                    "noise_setting": None,
+                    "random_user_agent": None,
+                    "use_sni_as_host": False,
+                }]
+            for host in hosts_list:
                 sni = ""
                 sni_list = host["sni"] or inbound["sni"]
                 if sni_list:

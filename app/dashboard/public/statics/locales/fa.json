@@ -120,6 +120,7 @@
   "on_hold": "در انتظار اتصال",
   "password": "گذرواژه",
   "previous": "قبلی",
+  "qrcodeDialog.configLinks": "لینک‌های پروتکل (برای افزودن گره در NekoBox/v2rayNG اسکن کنید)",
   "qrcodeDialog.sublink": "لینک اشتراک",
   "reset": "بازنشانی",
   "resetAllUsage": "بازنشانی کل مصرف",
