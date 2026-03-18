@@ -177,6 +177,7 @@
   "userDialog.userEdited": "已更新用户 {{username}}。",
   "userDialog.vlessDesc": "轻量、快速且安全",
   "userDialog.vmessDesc": "快速且安全",
+  "userDialog.hysteria2Desc": "基于UDP，极速，抗封锁",
   "userDialog.warningNoProtocol": "请至少选择一个协议",
   "userDialog.weeks": "周",
   "userDialog.connectionLimit": "连接限制",
