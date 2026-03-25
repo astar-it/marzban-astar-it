@@ -13,11 +13,13 @@ from config import (
     HYSTERIA2_PORT,
     JUICITY_ENABLED,
     JUICITY_PORT,
+    SSL_CERT_DOMAIN,
     TUIC_ENABLED,
     TUIC_PORT,
     XRAY_ASSETS_PATH,
     XRAY_EXECUTABLE_PATH,
     XRAY_JSON,
+    XRAY_SUBSCRIPTION_URL_PREFIX,
 )
 from xray_api import XRay as XRayAPI
 from xray_api import exceptions, types
@@ -38,6 +40,21 @@ api = XRayAPI(config.api_host, config.api_port)
 
 nodes: Dict[int, XRayNode] = {}
 
+def _detect_server_domain() -> str:
+    """Get the server domain for SNI from SSL_CERT_DOMAIN or XRAY_SUBSCRIPTION_URL_PREFIX."""
+    if SSL_CERT_DOMAIN:
+        return SSL_CERT_DOMAIN
+    if XRAY_SUBSCRIPTION_URL_PREFIX:
+        from urllib.parse import urlparse
+        parsed = urlparse(XRAY_SUBSCRIPTION_URL_PREFIX if "://" in XRAY_SUBSCRIPTION_URL_PREFIX
+                          else f"https://{XRAY_SUBSCRIPTION_URL_PREFIX}")
+        if parsed.hostname and parsed.hostname not in ("localhost", "127.0.0.1"):
+            return parsed.hostname
+    return ""
+
+_server_domain = _detect_server_domain()
+_server_sni = [_server_domain] if _server_domain else []
+
 if HYSTERIA2_ENABLED:
     from config import HYSTERIA2_OBFS_PASSWORD
 
@@ -47,7 +64,7 @@ if HYSTERIA2_ENABLED:
         "network": "hysteria2",
         "tls": "tls",
         "port": HYSTERIA2_PORT,
-        "sni": [],
+        "sni": _server_sni,
         "host": [],
         "path": "",
         "header_type": "",
@@ -65,7 +82,7 @@ if TUIC_ENABLED:
         "network": "quic",
         "tls": "tls",
         "port": TUIC_PORT,
-        "sni": [],
+        "sni": _server_sni,
         "host": [],
         "path": "",
         "header_type": "",
@@ -82,7 +99,7 @@ if JUICITY_ENABLED:
         "network": "quic",
         "tls": "tls",
         "port": JUICITY_PORT,
-        "sni": [],
+        "sni": _server_sni,
         "host": [],
         "path": "",
         "header_type": "",

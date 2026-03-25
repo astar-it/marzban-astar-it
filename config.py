@@ -138,6 +138,9 @@ DISABLE_RECORDING_NODE_USAGE = config("DISABLE_RECORDING_NODE_USAGE", cast=bool,
 # Default connection limit for users (0 = unlimited)
 DEFAULT_USER_CONNECTION_LIMIT = config("DEFAULT_USER_CONNECTION_LIMIT", cast=int, default=0)
 
+# SSL/TLS domain (used as SNI for Hysteria2/TUIC/Juicity; auto-detected from XRAY_SUBSCRIPTION_URL_PREFIX if not set)
+SSL_CERT_DOMAIN = config("SSL_CERT_DOMAIN", default="")
+
 # Hysteria2 settings
 HYSTERIA2_ENABLED = config("HYSTERIA2_ENABLED", default=True, cast=bool)
 HYSTERIA2_PORT = config("HYSTERIA2_PORT", cast=int, default=4443)

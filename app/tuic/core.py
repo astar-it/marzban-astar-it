@@ -79,7 +79,7 @@ class TUICCore:
                 if line:
                     line = line.strip()
                     self._logs_buffer.append(line)
-                    logger.debug(f"[tuic] {line}")
+                    logger.info(f"[tuic] {line}")
                 elif not self.process or self.process.poll() is not None:
                     break
 

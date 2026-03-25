@@ -79,7 +79,7 @@ class JuicityCore:
                 if line:
                     line = line.strip()
                     self._logs_buffer.append(line)
-                    logger.debug(f"[juicity] {line}")
+                    logger.info(f"[juicity] {line}")
                 elif not self.process or self.process.poll() is not None:
                     break
 
