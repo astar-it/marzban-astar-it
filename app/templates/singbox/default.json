@@ -6,8 +6,13 @@
     "servers": [
       {
         "tag": "dns-remote",
-        "address": "1.1.1.2",
+        "address": "tls://1.1.1.1",
         "detour": "proxy"
+      },
+      {
+        "tag": "dns-direct",
+        "address": "tls://8.8.8.8",
+        "detour": "direct"
       },
       {
         "tag": "dns-local",
@@ -18,7 +23,7 @@
     "rules": [
       {
         "outbound": "any",
-        "server": "dns-local"
+        "server": "dns-direct"
       }
     ],
     "final": "dns-remote",
