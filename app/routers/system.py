@@ -69,6 +69,65 @@ def get_inbounds(admin: Admin = Depends(Admin.get_current)):
     return xray.config.inbounds_by_protocol
 
 
+@router.get("/health")
+def health_check(admin: Admin = Depends(Admin.get_current)):
+    """Diagnostic endpoint showing core status and port listening."""
+    import os
+    import subprocess
+
+    from config import (
+        HYSTERIA2_ENABLED, HYSTERIA2_PORT, HYSTERIA2_EXECUTABLE_PATH,
+        TUIC_ENABLED, TUIC_PORT, TUIC_EXECUTABLE_PATH,
+        JUICITY_ENABLED, JUICITY_PORT, JUICITY_EXECUTABLE_PATH,
+    )
+
+    def check_udp_listening(port):
+        try:
+            result = subprocess.run(
+                ["ss", "-ulnp"], capture_output=True, text=True, timeout=5
+            )
+            return f":{port} " in result.stdout or f":{port}\t" in result.stdout
+        except Exception:
+            return None
+
+    def check_binary(path):
+        return os.path.isfile(path) and os.access(path, os.X_OK)
+
+    def check_config(path):
+        return os.path.isfile(path)
+
+    cert_ok = (
+        os.path.isfile("/var/lib/marzban/certs/fullchain.pem") and
+        os.path.isfile("/var/lib/marzban/certs/privkey.pem")
+    )
+
+    return {
+        "certificates_exist": cert_ok,
+        "xray_running": xray.core.started,
+        "hysteria2": {
+            "enabled": HYSTERIA2_ENABLED,
+            "binary": check_binary(HYSTERIA2_EXECUTABLE_PATH),
+            "config": check_config("/var/lib/marzban/hysteria2.json"),
+            "port": HYSTERIA2_PORT,
+            "udp_listening": check_udp_listening(HYSTERIA2_PORT),
+        },
+        "tuic": {
+            "enabled": TUIC_ENABLED,
+            "binary": check_binary(TUIC_EXECUTABLE_PATH),
+            "config": check_config("/var/lib/marzban/tuic.json"),
+            "port": TUIC_PORT,
+            "udp_listening": check_udp_listening(TUIC_PORT),
+        },
+        "juicity": {
+            "enabled": JUICITY_ENABLED,
+            "binary": check_binary(JUICITY_EXECUTABLE_PATH),
+            "config": check_config("/var/lib/marzban/juicity.json"),
+            "port": JUICITY_PORT,
+            "udp_listening": check_udp_listening(JUICITY_PORT),
+        },
+    }
+
+
 @router.get(
     "/hosts", response_model=Dict[str, List[ProxyHost]], responses={403: responses._403}
 )

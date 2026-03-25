@@ -12,7 +12,8 @@ from xray_api import exc as xray_exc
 _consecutive_failures = 0
 _MAX_CONSECUTIVE_FAILURES = 5
 
-# TUIC/Juicity cores (set at startup)
+# Protocol cores (set at startup)
+_hysteria2_core = None
 _tuic_core = None
 _juicity_core = None
 
