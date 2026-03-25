@@ -10,11 +10,6 @@
         "detour": "proxy"
       },
       {
-        "tag": "dns-direct",
-        "address": "tls://8.8.8.8",
-        "detour": "direct"
-      },
-      {
         "tag": "dns-local",
         "address": "local",
         "detour": "direct"
@@ -23,7 +18,7 @@
     "rules": [
       {
         "outbound": "any",
-        "server": "dns-direct"
+        "server": "dns-local"
       }
     ],
     "final": "dns-remote",
