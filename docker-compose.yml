@@ -7,8 +7,12 @@ services:
     # For local development, uncomment:
     # ports:
     #   - "8000:8000"
-    #   - "4443:4443/udp"  # Hysteria2 (UDP)
-    #   - "4443:4443/tcp"  # Hysteria2 fallback
+    #   - "4443:4443/udp"   # Hysteria2 (UDP)
+    #   - "4443:4443/tcp"   # Hysteria2 fallback
+    #   - "18443:18443/udp" # TUIC (UDP)
+    #   - "18443:18443/tcp" # TUIC fallback
+    #   - "23182:23182/udp" # Juicity (UDP)
+    #   - "23182:23182/tcp" # Juicity fallback
     volumes:
       - /var/lib/marzban:/var/lib/marzban
       - /var/lib/marzban/certs:/var/lib/marzban/certs

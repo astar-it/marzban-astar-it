@@ -49,10 +49,10 @@ class SingBoxConfiguration(str):
         self.config["outbounds"].append(outbound_data)
 
     def render(self, reverse=False):
-        urltest_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2", "tuic", "juicity"]
+        urltest_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2", "tuic"]
         urltest_tags = [outbound["tag"]
                         for outbound in self.config["outbounds"] if outbound["type"] in urltest_types]
-        selector_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2", "tuic", "juicity", "urltest"]
+        selector_types = ["vmess", "vless", "trojan", "shadowsocks", "hysteria2", "tuic", "urltest"]
         selector_tags = [outbound["tag"]
                          for outbound in self.config["outbounds"] if outbound["type"] in selector_types]
 
@@ -290,7 +290,7 @@ class SingBoxConfiguration(str):
         if inbound['protocol'] == 'tuic':
             return self._add_tuic(remark, address, inbound, settings)
         if inbound['protocol'] == 'juicity':
-            return self._add_juicity(remark, address, inbound, settings)
+            return
 
         net = inbound["network"]
         path = inbound["path"]
@@ -375,6 +375,11 @@ class SingBoxConfiguration(str):
         remark = self._remark_validation(remark)
         self.proxy_remarks.append(remark)
 
+        tls_config = {"enabled": True, "insecure": True}
+        sni = inbound.get('sni', '')
+        if sni:
+            tls_config['server_name'] = sni
+
         outbound = {
             "type": "tuic",
             "tag": remark,
@@ -384,7 +389,8 @@ class SingBoxConfiguration(str):
             "password": settings['password'],
             "congestion_control": "bbr",
             "udp_relay_mode": "native",
-            "tls": {"enabled": True, "insecure": True},
+            "zero_rtt_handshake": False,
+            "tls": tls_config,
         }
         self.add_outbound(outbound)
 
