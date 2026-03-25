@@ -16,8 +16,10 @@ RUN apt-get update \
 ARG XRAY_VERSION=latest
 RUN set -ex \
     && if [ "$XRAY_VERSION" = "latest" ]; then \
-        XRAY_VERSION=$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/'); \
+        XRAY_VERSION=$(curl -sL https://api.github.com/repos/XTLS/Xray-core/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4); \
     fi \
+    && echo "Xray version: ${XRAY_VERSION}" \
+    && test -n "$XRAY_VERSION" && echo "$XRAY_VERSION" | grep -qE '^v[0-9]' || { echo "ERROR: Failed to detect Xray version (got: $XRAY_VERSION)"; exit 1; } \
     && ARCH=$(uname -m) \
     && case "$ARCH" in \
         x86_64) XRAY_ARCH="64" ;; \
@@ -38,7 +40,7 @@ RUN set -ex \
 ARG HYSTERIA_VERSION=latest
 RUN set -ex \
     && if [ "$HYSTERIA_VERSION" = "latest" ]; then \
-        HYSTERIA_VERSION=$(curl -s https://api.github.com/repos/apernet/hysteria/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/'); \
+        HYSTERIA_VERSION=$(curl -sL https://api.github.com/repos/apernet/hysteria/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4); \
     fi \
     && ARCH=$(uname -m) \
     && case "$ARCH" in \
@@ -55,7 +57,7 @@ RUN set -ex \
 ARG TUIC_VERSION=latest
 RUN set -ex \
     && if [ "$TUIC_VERSION" = "latest" ]; then \
-        TUIC_VERSION=$(curl -s https://api.github.com/repos/Itsusinn/tuic/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/'); \
+        TUIC_VERSION=$(curl -sL https://api.github.com/repos/Itsusinn/tuic/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4); \
     fi \
     && ARCH=$(uname -m) \
     && case "$ARCH" in \
@@ -72,7 +74,7 @@ RUN set -ex \
 ARG JUICITY_VERSION=latest
 RUN set -ex \
     && if [ "$JUICITY_VERSION" = "latest" ]; then \
-        JUICITY_VERSION=$(curl -s https://api.github.com/repos/juicity/juicity/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/'); \
+        JUICITY_VERSION=$(curl -sL https://api.github.com/repos/juicity/juicity/releases/latest | grep -m1 '"tag_name"' | cut -d'"' -f4); \
     fi \
     && ARCH=$(uname -m) \
     && case "$ARCH" in \
