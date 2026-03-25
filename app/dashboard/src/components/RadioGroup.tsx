@@ -179,7 +179,11 @@ const RadioCard: FC<
     (useDashboard.getState().inbounds.get(title as ProtocolType) || [])
       .length !== inBoundDefaultValue.length;
 
+  const standaloneProtocols: ProtocolType[] = ["hysteria2", "tuic", "juicity"];
+  const isStandalone = standaloneProtocols.includes(title as ProtocolType);
+
   const protocolHasInbound =
+    isStandalone ||
     (useDashboard.getState().inbounds.get(title as ProtocolType) || []).length >
     0;
 
