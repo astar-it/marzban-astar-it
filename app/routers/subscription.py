@@ -56,15 +56,6 @@ def user_subscription(
     """Provides a subscription link based on the user agent (Clash, V2Ray, etc.)."""
     user: UserResponse = UserResponse.model_validate(dbuser)
 
-    accept_header = request.headers.get("Accept", "")
-    if "text/html" in accept_header:
-        return HTMLResponse(
-            render_template(
-                SUBSCRIPTION_PAGE_TEMPLATE,
-                {"user": user}
-            )
-        )
-
     crud.update_user_sub(db, dbuser, user_agent)
     response_headers = {
         "content-disposition": f'attachment; filename="{user.username}"',
@@ -77,6 +68,23 @@ def user_subscription(
             for key, val in get_subscription_user_info(user).items()
         )
     }
+
+    _PROXY_CLIENT_RE = re.compile(
+        r'^(SFA|SFI|SFM|SFT|[Kk]aring|[Hh]iddify|[Nn]eko|[Cc]lash|[Ss]tash|[Ff][Ll][Cc]lash'
+        r'|[Mm]ihomo|v2ray|[Ss]treisand|[Hh]app|SS[A-Z]|Outline|Shadowsocks)',
+        re.IGNORECASE,
+    )
+    is_proxy_client = bool(_PROXY_CLIENT_RE.match(user_agent))
+
+    if not is_proxy_client:
+        accept_header = request.headers.get("Accept", "")
+        if "text/html" in accept_header:
+            return HTMLResponse(
+                render_template(
+                    SUBSCRIPTION_PAGE_TEMPLATE,
+                    {"user": user}
+                )
+            )
 
     if re.match(r'^([Cc]lash-verge|[Cc]lash[-\.]?[Mm]eta|[Ff][Ll][Cc]lash|[Mm]ihomo)', user_agent):
         conf = generate_subscription(user=user, config_format="clash-meta", as_base64=False, reverse=False)
@@ -131,8 +139,6 @@ def user_subscription(
         else:
             conf = generate_subscription(user=user, config_format="v2ray", as_base64=True, reverse=False)
             return Response(content=conf, media_type="text/plain", headers=response_headers)
-
-
 
     else:
         conf = generate_subscription(user=user, config_format="v2ray", as_base64=True, reverse=False)
