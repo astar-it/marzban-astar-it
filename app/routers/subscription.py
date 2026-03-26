@@ -34,6 +34,38 @@ client_config = {
 
 router = APIRouter(tags=['Subscription'], prefix=f'/{XRAY_SUBSCRIPTION_PATH}')
 
+# Substrings: desktop NekoBox/NekoRay send Mozilla/... NekoBox/1.x (not ^NekoBox).
+_PROXY_CLIENT_SUBSTRINGS = (
+    "nekobox",
+    "nekoray",
+    "sing-box",
+    "clash",
+    "stash",
+    "mihomo",
+    "flclash",
+    "v2rayn",
+    "v2rayng",
+    "streissand",
+    "hiddify",
+    "happ/",
+    "shadowsocks",
+    "ssconf",
+    "sssub",
+    "sfa/",
+    "sfi/",
+    "sfm/",
+    "sft/",
+    "karing",
+    "outline",
+)
+
+
+def _user_agent_looks_like_proxy_client(user_agent: str) -> bool:
+    if not user_agent:
+        return False
+    u = user_agent.lower()
+    return any(s in u for s in _PROXY_CLIENT_SUBSTRINGS)
+
 
 def get_subscription_user_info(user: UserResponse) -> dict:
     """Retrieve user subscription information including upload, download, total data, and expiry."""
@@ -69,12 +101,7 @@ def user_subscription(
         )
     }
 
-    _PROXY_CLIENT_RE = re.compile(
-        r'^(SFA|SFI|SFM|SFT|[Kk]aring|[Hh]iddify|[Nn]eko|[Cc]lash|[Ss]tash|[Ff][Ll][Cc]lash'
-        r'|[Mm]ihomo|v2ray|[Ss]treisand|[Hh]app|SS[A-Z]|Outline|Shadowsocks)',
-        re.IGNORECASE,
-    )
-    is_proxy_client = bool(_PROXY_CLIENT_RE.match(user_agent))
+    is_proxy_client = _user_agent_looks_like_proxy_client(user_agent)
 
     if not is_proxy_client:
         accept_header = request.headers.get("Accept", "")
@@ -94,7 +121,17 @@ def user_subscription(
         conf = generate_subscription(user=user, config_format="clash", as_base64=False, reverse=False)
         return Response(content=conf, media_type="text/yaml", headers=response_headers)
 
-    elif re.match(r'^(SFA|SFI|SFM|SFT|[Kk]aring|[Hh]iddify[Nn]ext|[Nn]eko[Bb]ox)', user_agent):
+    elif (
+        re.search(r"(?i)(SFA|SFI|SFM|SFT|Karing|HiddifyNext)", user_agent)
+        or (
+            re.search(r"(?i)NekoBox", user_agent)
+            and (
+                "Android" in user_agent
+                or user_agent.lstrip().lower().startswith("nekobox")
+            )
+        )
+    ):
+        # Desktop NekoBox: Qt + Mozilla/... NekoBox/1.x — no Android → v2ray branch (share links).
         conf = generate_subscription(user=user, config_format="sing-box", as_base64=False, reverse=False)
         return Response(content=conf, media_type="application/json", headers=response_headers)
 
