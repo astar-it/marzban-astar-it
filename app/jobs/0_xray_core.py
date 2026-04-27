@@ -1,3 +1,4 @@
+import hashlib
 import os
 import time
 import traceback
@@ -16,6 +17,16 @@ _MAX_CONSECUTIVE_FAILURES = 5
 _hysteria2_core = None
 _tuic_core = None
 _juicity_core = None
+
+
+def _tls_file_signature(*paths):
+    digest = hashlib.sha256()
+    for path in paths:
+        if not os.path.isfile(path):
+            return None
+        with open(path, "rb") as f:
+            digest.update(f.read())
+    return digest.hexdigest()
 
 
 def core_health_check():
@@ -231,6 +242,7 @@ def start_core():
     # TUIC/Juicity config sync - only restart when user list changes
     _last_tuic_users = {}
     _last_juicity_users = {}
+    _last_tls_signature = _tls_file_signature(cert_path, key_path)
 
     def sync_tuic_juicity():
         nonlocal _last_tuic_users, _last_juicity_users
@@ -264,7 +276,106 @@ def start_core():
             except Exception as e:
                 logger.debug(f"Juicity sync: {e}")
 
+    def sync_tls_certs_from_acme():
+        nonlocal _last_tls_signature
+        global _hysteria2_core, _tuic_core, _juicity_core
+
+        from config import HYSTERIA2_ENABLED, JUICITY_ENABLED, SSL_CERT_DOMAIN, TUIC_ENABLED
+
+        acme_json_path = os.getenv("TRAEFIK_ACME_JSON", "/etc/traefik/acme.json")
+        if not SSL_CERT_DOMAIN or not os.path.isfile(acme_json_path):
+            return
+
+        temp_cert_path = f"{cert_path}.new"
+        temp_key_path = f"{key_path}.new"
+
+        try:
+            from scripts.extract_traefik_cert import extract as extract_traefik_cert
+
+            for temp_path in (temp_cert_path, temp_key_path):
+                try:
+                    if os.path.isfile(temp_path):
+                        os.remove(temp_path)
+                except OSError:
+                    pass
+
+            if not extract_traefik_cert(SSL_CERT_DOMAIN, acme_json_path, temp_cert_path, temp_key_path):
+                return
+
+            new_signature = _tls_file_signature(temp_cert_path, temp_key_path)
+            if not new_signature or new_signature == _last_tls_signature:
+                return
+
+            try:
+                import subprocess
+
+                cert_check = subprocess.run(
+                    ["openssl", "x509", "-in", temp_cert_path, "-noout", "-checkend", "0"],
+                    capture_output=True, text=True, timeout=5,
+                )
+                key_check = subprocess.run(
+                    ["openssl", "pkey", "-in", temp_key_path, "-noout"],
+                    capture_output=True, text=True, timeout=5,
+                )
+                if cert_check.returncode != 0 or key_check.returncode != 0:
+                    logger.warning(
+                        "Skipping TLS cert refresh from acme.json because extracted PEM is invalid"
+                    )
+                    return
+            except Exception as e:
+                logger.warning(f"TLS cert refresh validation skipped: {e}")
+
+            os.replace(temp_cert_path, cert_path)
+            os.replace(temp_key_path, key_path)
+            _last_tls_signature = _tls_file_signature(cert_path, key_path)
+
+            logger.warning("TLS certificate updated from Traefik acme.json, reloading cores")
+
+            # Restart Xray so TLS inbounds pick up the fresh PEM files.
+            new_config = xray.config.include_db_users()
+            xray.core.restart(new_config)
+
+            if HYSTERIA2_ENABLED and _hysteria2_core:
+                try:
+                    from app.hysteria.config import write_hysteria2_config
+
+                    write_hysteria2_config("/var/lib/marzban/hysteria2.json", cert_path, key_path)
+                    _hysteria2_core.restart()
+                    logger.info("Hysteria2 restarted after TLS certificate refresh")
+                except Exception as e:
+                    logger.warning(f"Hysteria2 TLS refresh failed: {e}")
+
+            if TUIC_ENABLED and _tuic_core:
+                try:
+                    from app.tuic.config import write_tuic_config
+
+                    write_tuic_config("/var/lib/marzban/tuic.json", cert_path, key_path)
+                    _tuic_core.restart()
+                    logger.info("TUIC restarted after TLS certificate refresh")
+                except Exception as e:
+                    logger.warning(f"TUIC TLS refresh failed: {e}")
+
+            if JUICITY_ENABLED and _juicity_core:
+                try:
+                    from app.juicity.config import write_juicity_config
+
+                    write_juicity_config("/var/lib/marzban/juicity.json", cert_path, key_path)
+                    _juicity_core.restart()
+                    logger.info("Juicity restarted after TLS certificate refresh")
+                except Exception as e:
+                    logger.warning(f"Juicity TLS refresh failed: {e}")
+        except Exception as e:
+            logger.debug(f"TLS cert sync from acme.json skipped: {e}")
+        finally:
+            for temp_path in (temp_cert_path, temp_key_path):
+                try:
+                    if os.path.isfile(temp_path):
+                        os.remove(temp_path)
+                except OSError:
+                    pass
+
     scheduler.add_job(sync_tuic_juicity, 'interval', seconds=60, coalesce=True, max_instances=1)
+    scheduler.add_job(sync_tls_certs_from_acme, 'interval', seconds=300, coalesce=True, max_instances=1)
 
 
 @app.on_event("shutdown")
