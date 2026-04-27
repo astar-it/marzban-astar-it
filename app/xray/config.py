@@ -264,9 +264,15 @@ class XRayConfig(dict):
                         try:
                             from app.xray import core
                             x25519 = core.get_x25519(pvk)
-                            settings['pbk'] = x25519['public_key']
-                        except ImportError:
+                            if x25519 and x25519.get('public_key'):
+                                settings['pbk'] = x25519['public_key']
+                        except Exception:
                             pass
+
+                        if not settings.get('pbk'):
+                            saved_public_key = PosixPath("/var/lib/marzban/certs/reality_public_key.txt")
+                            if saved_public_key.is_file():
+                                settings['pbk'] = saved_public_key.read_text().strip()
 
                         if not settings.get('pbk'):
                             raise ValueError(
